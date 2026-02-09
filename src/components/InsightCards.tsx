@@ -48,6 +48,9 @@ export default function InsightCards() {
 
   if (!stats) return null;
 
+  const parentsAlive = rels.parentsAlive || 'both';
+  const parentLabel = parentsAlive === 'one' ? 'parent' : 'parents';
+
   return (
     <div className="space-y-4">
       <motion.h2
@@ -61,14 +64,16 @@ export default function InsightCards() {
       </motion.h2>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <InsightCard
-          emoji={"\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67"}
-          value={stats.parentVisitsLeft}
-          label="visits with parents left"
-          sublabel={`Seeing them ${rels.parentVisitsPerYear}x/year for ~${stats.parentYearsLeft} more years`}
-          color={CATEGORY_COLORS.parents}
-          delay={0.5}
-        />
+        {parentsAlive !== 'neither' && (
+          <InsightCard
+            emoji={"\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67"}
+            value={stats.parentVisitsLeft}
+            label={`visits with ${parentLabel} left`}
+            sublabel={`Seeing them ${rels.parentVisitsPerYear}x/year for ~${stats.parentYearsLeft} more years`}
+            color={CATEGORY_COLORS.parents}
+            delay={0.5}
+          />
+        )}
 
         <InsightCard
           emoji={"\uD83D\uDCF1"}

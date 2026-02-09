@@ -1,3 +1,5 @@
+![Memento Vita Header](public/assets/header-image.png)
+
 # Memento Vita
 
 **Your life, in weeks.**

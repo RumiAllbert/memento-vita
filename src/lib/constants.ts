@@ -7,6 +7,8 @@ export const DEFAULT_PARENTS_AGE = 55;
 export const DEFAULT_PARENTS_LIFE_EXPECTANCY = 80;
 export const DEFAULT_PARENT_VISITS_PER_YEAR = 10;
 export const DEFAULT_PHONE_HOURS_PER_DAY = 4;
+export const DEFAULT_PARENTS_ALIVE = 'both';
+export const DEFAULT_PARENTS_LIVE_TOGETHER = 'true';
 
 export const DEFAULT_TIME_ALLOCATION = {
   sleep: 8,

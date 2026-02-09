@@ -25,7 +25,7 @@ interface StatCardProps {
 function StatCard({ label, children, delay = 0 }: StatCardProps) {
   return (
     <motion.div
-      className="rounded-2xl p-6"
+      className="rounded-2xl p-4 sm:p-6"
       style={{
         backgroundColor: 'var(--th-surface)',
         border: '1px solid var(--th-border)',
@@ -34,7 +34,7 @@ function StatCard({ label, children, delay = 0 }: StatCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94], delay }}
     >
-      <div className="text-2xl font-medium" style={{ color: 'var(--th-text)' }}>
+      <div className="text-xl sm:text-2xl font-medium" style={{ color: 'var(--th-text)' }}>
         {children}
       </div>
       <div className="text-xs mt-2" style={{ color: 'var(--th-text-muted)' }}>
@@ -50,7 +50,7 @@ export default function StatsBar() {
 
   if (!stats) return null;
 
-  const firstName = config.name.split(' ')[0] || 'there';
+  const firstName = (config.name || '').split(' ')[0] || 'there';
 
   return (
     <div className="space-y-4">
@@ -64,7 +64,7 @@ export default function StatsBar() {
         Hey {firstName}, here's your life at a glance.
       </motion.p>
 
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
         <StatCard label="weeks lived" delay={0}>
           <AnimatedNumber value={stats.weeksLived} />
         </StatCard>
@@ -82,7 +82,7 @@ export default function StatsBar() {
         </StatCard>
 
         <motion.div
-          className="rounded-2xl p-6 flex items-center justify-center col-span-2 lg:col-span-1"
+          className="rounded-2xl p-4 sm:p-6 flex items-center justify-center col-span-2 lg:col-span-1"
           style={{
             backgroundColor: 'var(--th-surface)',
             border: '1px solid var(--th-border)',

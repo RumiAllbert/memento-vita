@@ -12,6 +12,8 @@ export interface RelationshipConfig {
   parentsLifeExpectancy: number;
   parentVisitsPerYear: number;
   phoneHoursPerDay: number;
+  parentsAlive: 'both' | 'one' | 'neither';
+  parentsLiveTogether: 'true' | 'false';
 }
 
 export interface TimeAllocation {
@@ -152,8 +154,15 @@ export function calcLifeStats(
   const weekendsLeft = weeksRemaining * 2;
 
   // Relationship stats
-  const parentYearsLeft = Math.max(0, relationships.parentsLifeExpectancy - relationships.parentsAge);
-  const parentVisitsLeft = Math.round(parentYearsLeft * relationships.parentVisitsPerYear);
+  let parentYearsLeft = 0;
+  let parentVisitsLeft = 0;
+  if (relationships.parentsAlive !== 'neither') {
+    parentYearsLeft = Math.max(0, relationships.parentsLifeExpectancy - relationships.parentsAge);
+    parentVisitsLeft = Math.round(parentYearsLeft * relationships.parentVisitsPerYear);
+    if (relationships.parentsAlive === 'both' && relationships.parentsLiveTogether === 'false') {
+      parentVisitsLeft *= 2;
+    }
+  }
 
   // Phone time: total weeks of your remaining life spent on phone
   const phoneWeeksTotal = Math.round((relationships.phoneHoursPerDay / 24) * weeksRemaining);

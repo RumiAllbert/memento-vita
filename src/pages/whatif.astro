@@ -1,0 +1,13 @@
+---
+import Layout from '../layouts/Layout.astro';
+import WhatIfSimulator from '../components/WhatIfSimulator.tsx';
+---
+
+<Layout title="Memento Vita — What If?">
+  <WhatIfSimulator client:load />
+  <script>
+    if (typeof window !== 'undefined' && localStorage.getItem('onboarded') !== 'true') {
+      window.location.href = '/';
+    }
+  </script>
+</Layout>

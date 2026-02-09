@@ -3,45 +3,81 @@ import Layout from '../layouts/Layout.astro';
 import StatsBar from '../components/StatsBar.tsx';
 import LifeGrid from '../components/LifeGrid.tsx';
 import CategoryBreakdown from '../components/CategoryBreakdown.tsx';
+import InsightCards from '../components/InsightCards.tsx';
+import ThemeToggle from '../components/ThemeToggle.tsx';
+import ExportPoster from '../components/ExportPoster.tsx';
+import CoffeeToast from '../components/CoffeeToast.tsx';
 ---
 
-<Layout title="Memento Mori — Your Life">
-  <div class="max-w-6xl mx-auto px-4 py-8 space-y-6">
+<Layout title="Memento Vita — Your Life">
+  <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 sm:py-10 space-y-6 sm:space-y-10">
     <!-- Header -->
-    <header class="flex items-center justify-between">
-      <div>
-        <h1 class="text-lg font-medium text-text-primary">Memento Mori</h1>
-        <p class="text-xs text-text-muted mt-0.5">Your life in weeks</p>
+    <header class="flex items-center justify-between gap-4">
+      <div class="shrink-0">
+        <h1 class="text-lg sm:text-xl font-medium" style="color: var(--th-text)">Memento Vita</h1>
+        <p class="text-[10px] sm:text-xs mt-1" style="color: var(--th-text-muted)">Your life in perspective</p>
       </div>
-      <a
-        href="/"
-        id="edit-btn"
-        class="text-xs text-text-muted hover:text-text-primary transition-colors border border-future-border rounded-lg px-3 py-1.5"
-      >
-        Edit Settings
-      </a>
+      <div class="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
+        <ThemeToggle client:load />
+        <ExportPoster client:load />
+        <a
+          href="/whatif"
+          class="flex items-center gap-1.5 sm:gap-2 text-xs px-3 sm:px-4 py-2 rounded-lg transition-colors"
+          style="color: var(--th-text-muted); border: 1px solid var(--th-border);"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <span class="hidden sm:inline">What If</span>
+        </a>
+        <a
+          href="/"
+          id="edit-btn"
+          class="text-xs px-3 sm:px-4 py-2 rounded-lg transition-colors"
+          style="color: var(--th-text-muted); border: 1px solid var(--th-border);"
+        >
+          Edit
+        </a>
+      </div>
     </header>
 
     <!-- Stats -->
     <StatsBar client:load />
 
-    <!-- Main grid + sidebar -->
-    <div class="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+    <!-- Life Grid + Category Breakdown -->
+    <div class="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4 sm:gap-6">
       <LifeGrid client:load />
       <CategoryBreakdown client:load />
     </div>
+
+    <!-- Insight Cards -->
+    <InsightCards client:load />
+
+    <!-- Footer -->
+    <footer class="pt-6 sm:pt-8 pb-6 text-center space-y-2" style="border-top: 1px solid var(--th-border);">
+      <p class="text-[10px]" style="color: var(--th-text-muted);">
+        Time is the most valuable thing a man can spend. — Theophrastus
+      </p>
+      <p class="text-[10px]" style="color: var(--th-text-muted);">
+        made with ♥️ by <a href="https://rumiallbert.com" target="_blank" rel="noopener noreferrer" class="underline underline-offset-2 transition-colors hover:opacity-70" style="color: var(--th-text);">Rumi</a>
+      </p>
+    </footer>
   </div>
 
+  <!-- Coffee toast -->
+  <CoffeeToast client:load />
+
   <script>
-    // Redirect to onboarding if no data
     if (typeof window !== 'undefined' && localStorage.getItem('onboarded') !== 'true') {
       window.location.href = '/';
     }
 
-    // Edit button clears onboarded flag to show onboarding form
     document.getElementById('edit-btn')?.addEventListener('click', (e) => {
       e.preventDefault();
       localStorage.setItem('onboarded', 'false');
+      localStorage.setItem('hasSeenReveal', 'false');
       window.location.href = '/';
     });
   </script>

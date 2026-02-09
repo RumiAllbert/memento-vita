@@ -1,10 +1,47 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '@nanostores/react';
-import { $lifeConfig, $timeAllocation, $relationships, $hasOnboarded, $theme } from '../stores/life';
+import { $lifeConfig, $timeAllocation, $relationships, $hasOnboarded } from '../stores/life';
 import TimeSlider from './TimeSlider';
 import ThemeToggle from './ThemeToggle';
-import { CATEGORY_COLORS, CATEGORY_LABELS } from '../lib/constants';
+import IntroAnimation from './IntroAnimation';
+import { CATEGORY_COLORS, CATEGORY_LABELS, DEFAULT_PARENTS_ALIVE, DEFAULT_PARENTS_LIVE_TOGETHER } from '../lib/constants';
+import { AVERAGES, getComparison } from '../lib/stats';
+
+// ---- PillSelector ----
+
+function PillSelector<T extends string>({
+  options,
+  value,
+  onChange,
+}: {
+  options: { value: T; label: string }[];
+  value: T;
+  onChange: (v: T) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-2 justify-center">
+      {options.map((opt) => {
+        const selected = opt.value === value;
+        return (
+          <motion.button
+            key={opt.value}
+            onClick={() => onChange(opt.value)}
+            className="px-3 sm:px-5 py-2.5 rounded-full text-xs font-medium transition-colors"
+            style={{
+              backgroundColor: selected ? 'var(--th-accent)' : 'var(--th-surface)',
+              color: selected ? 'var(--th-accent-inv)' : 'var(--th-text-muted)',
+              border: `1px solid ${selected ? 'var(--th-accent)' : 'var(--th-border)'}`,
+            }}
+            whileTap={{ scale: 0.97 }}
+          >
+            {opt.label}
+          </motion.button>
+        );
+      })}
+    </div>
+  );
+}
 
 const slideVariants = {
   enter: (direction: number) => ({
@@ -18,6 +55,27 @@ const slideVariants = {
   }),
 };
 
+// Small helper for the contextual hint boxes
+function Hint({ children }: { children: React.ReactNode }) {
+  return (
+    <motion.div
+      className="rounded-xl p-5"
+      style={{
+        backgroundColor: 'var(--th-surface)',
+        border: '1px solid var(--th-border)',
+      }}
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      key={String(children)}
+    >
+      <p className="text-xs leading-relaxed" style={{ color: 'var(--th-text-muted)' }}>
+        {children}
+      </p>
+    </motion.div>
+  );
+}
+
 const STEPS = 5;
 
 export default function Onboarding() {
@@ -26,6 +84,7 @@ export default function Onboarding() {
   const rels = useStore($relationships);
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
+  const [showIntro, setShowIntro] = useState(true);
 
   const next = () => {
     if (step < STEPS - 1) {
@@ -33,7 +92,7 @@ export default function Onboarding() {
       setStep(step + 1);
     } else {
       $hasOnboarded.set('true');
-      window.location.href = '/dashboard';
+      window.location.href = '/reveal';
     }
   };
 
@@ -49,14 +108,58 @@ export default function Onboarding() {
     0
   );
 
-  const isStep1Valid = config.name.trim() !== '' && config.birthDate !== '';
+  const isStep1Valid = (config.name || '').trim() !== '' && config.birthDate !== '';
 
   const inputClass =
     'w-full rounded-lg px-4 py-3 focus:outline-none transition-colors text-sm';
 
+  const lifeExp = Number(config.lifeExpectancy);
+  const retAge = Number(config.retirementAge);
+  const parentVisits = Number(rels.parentVisitsPerYear);
+  const phoneHrs = Number(rels.phoneHoursPerDay);
+  const parentsAlive = (rels.parentsAlive || DEFAULT_PARENTS_ALIVE) as 'both' | 'one' | 'neither';
+  const parentsLiveTogether = (rels.parentsLiveTogether || DEFAULT_PARENTS_LIVE_TOGETHER) as 'true' | 'false';
+
+  const rawVisits = Math.max(
+    0,
+    Math.round(
+      (Number(rels.parentsLifeExpectancy) - Number(rels.parentsAge)) * parentVisits
+    )
+  );
+  const visitsLeft =
+    parentsAlive === 'neither'
+      ? 0
+      : parentsAlive === 'both' && parentsLiveTogether === 'false'
+        ? rawVisits * 2
+        : rawVisits;
+
+  const parentLabel = parentsAlive === 'one' ? 'parent' : 'parents';
+
+  if (showIntro) {
+    return (
+      <AnimatePresence mode="wait">
+        <motion.div
+          key="intro"
+          initial={{ opacity: 1 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+        >
+          <div className="fixed top-4 right-4 z-50">
+            <ThemeToggle />
+          </div>
+          <IntroAnimation onComplete={() => setShowIntro(false)} />
+        </motion.div>
+      </AnimatePresence>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6">
-      {/* Theme toggle top-right */}
+    <motion.div
+      className="min-h-screen flex flex-col items-center justify-center px-4 py-6 sm:p-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+    >
       <div className="fixed top-4 right-4 z-50">
         <ThemeToggle />
       </div>
@@ -86,11 +189,11 @@ export default function Onboarding() {
             exit="exit"
             transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
-            {/* Step 0: Name + Birth Date */}
+            {/* Step 0: Name + Birth Date + Life Expectancy */}
             {step === 0 && (
               <div className="space-y-10">
                 <div className="text-center space-y-3">
-                  <h1 className="text-3xl font-medium" style={{ color: 'var(--th-text)' }}>
+                  <h1 className="text-2xl sm:text-3xl font-medium" style={{ color: 'var(--th-text)' }}>
                     Let's begin
                   </h1>
                   <p className="text-sm leading-relaxed" style={{ color: 'var(--th-text-muted)' }}>
@@ -106,7 +209,7 @@ export default function Onboarding() {
                     <input
                       type="text"
                       placeholder="Enter your name"
-                      value={config.name}
+                      value={config.name || ''}
                       onChange={(e) => $lifeConfig.setKey('name', e.target.value)}
                       className={inputClass}
                       style={{
@@ -123,7 +226,7 @@ export default function Onboarding() {
                     </label>
                     <input
                       type="date"
-                      value={config.birthDate}
+                      value={config.birthDate || ''}
                       onChange={(e) => $lifeConfig.setKey('birthDate', e.target.value)}
                       className={inputClass}
                       style={{
@@ -136,13 +239,18 @@ export default function Onboarding() {
 
                   <TimeSlider
                     label="Life Expectancy"
-                    value={Number(config.lifeExpectancy)}
+                    value={lifeExp}
                     min={50}
                     max={100}
                     step={1}
                     unit="years"
                     onChange={(v) => $lifeConfig.setKey('lifeExpectancy', String(v))}
                   />
+
+                  <Hint>
+                    {AVERAGES.lifeExpectancy.label}{' '}
+                    {getComparison('lifeExpectancy', lifeExp)}
+                  </Hint>
                 </div>
               </div>
             )}
@@ -151,7 +259,7 @@ export default function Onboarding() {
             {step === 1 && (
               <div className="space-y-10">
                 <div className="text-center space-y-3">
-                  <h1 className="text-3xl font-medium" style={{ color: 'var(--th-text)' }}>
+                  <h1 className="text-2xl sm:text-3xl font-medium" style={{ color: 'var(--th-text)' }}>
                     When will you retire?
                   </h1>
                   <p className="text-sm leading-relaxed" style={{ color: 'var(--th-text-muted)' }}>
@@ -162,7 +270,7 @@ export default function Onboarding() {
                 <div className="space-y-8">
                   <TimeSlider
                     label="Retirement Age"
-                    value={Number(config.retirementAge)}
+                    value={retAge}
                     min={30}
                     max={80}
                     step={1}
@@ -170,18 +278,10 @@ export default function Onboarding() {
                     onChange={(v) => $lifeConfig.setKey('retirementAge', String(v))}
                   />
 
-                  <div
-                    className="rounded-xl p-5"
-                    style={{
-                      backgroundColor: 'var(--th-surface)',
-                      border: '1px solid var(--th-border)',
-                    }}
-                  >
-                    <p className="text-xs leading-relaxed" style={{ color: 'var(--th-text-muted)' }}>
-                      The average global retirement age is 63-65.
-                      This determines when "work hours" stop counting in your time breakdown.
-                    </p>
-                  </div>
+                  <Hint>
+                    {AVERAGES.retirementAge.label}{' '}
+                    {getComparison('retirementAge', retAge)}
+                  </Hint>
                 </div>
               </div>
             )}
@@ -190,65 +290,123 @@ export default function Onboarding() {
             {step === 2 && (
               <div className="space-y-10">
                 <div className="text-center space-y-3">
-                  <h1 className="text-3xl font-medium" style={{ color: 'var(--th-text)' }}>
+                  <h1 className="text-2xl sm:text-3xl font-medium" style={{ color: 'var(--th-text)' }}>
                     Your relationships
                   </h1>
                   <p className="text-sm leading-relaxed" style={{ color: 'var(--th-text-muted)' }}>
-                    How often do you see the people who matter most?
+                    Are your parents still around?
                   </p>
                 </div>
 
-                <div className="space-y-6">
-                  <TimeSlider
-                    label="Your parents' current age"
-                    value={Number(rels.parentsAge)}
-                    min={30}
-                    max={100}
-                    step={1}
-                    unit="years"
-                    color={CATEGORY_COLORS.parents}
-                    onChange={(v) => $relationships.setKey('parentsAge', String(v))}
-                  />
+                <PillSelector
+                  options={[
+                    { value: 'both' as const, label: 'Both parents' },
+                    { value: 'one' as const, label: 'One parent' },
+                    { value: 'neither' as const, label: 'Neither' },
+                  ]}
+                  value={parentsAlive}
+                  onChange={(v) => $relationships.setKey('parentsAlive', v)}
+                />
 
-                  <TimeSlider
-                    label="Parents' life expectancy"
-                    value={Number(rels.parentsLifeExpectancy)}
-                    min={50}
-                    max={100}
-                    step={1}
-                    unit="years"
-                    color={CATEGORY_COLORS.parents}
-                    onChange={(v) => $relationships.setKey('parentsLifeExpectancy', String(v))}
-                  />
+                <AnimatePresence mode="wait">
+                  {parentsAlive === 'neither' ? (
+                    <motion.div
+                      key="neither"
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.25 }}
+                    >
+                      <Hint>
+                        We're sorry for your loss. We'll skip parent-related sections throughout the app.
+                      </Hint>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="alive"
+                      className="space-y-6"
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.25 }}
+                    >
+                      {parentsAlive === 'both' && (
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-xl px-4 sm:px-5 py-4"
+                          style={{
+                            backgroundColor: 'var(--th-surface)',
+                            border: '1px solid var(--th-border)',
+                          }}
+                        >
+                          <span className="text-xs" style={{ color: 'var(--th-text-muted)' }}>
+                            Do they live together?
+                          </span>
+                          <PillSelector
+                            options={[
+                              { value: 'true' as const, label: 'Together' },
+                              { value: 'false' as const, label: 'Apart' },
+                            ]}
+                            value={parentsLiveTogether}
+                            onChange={(v) => $relationships.setKey('parentsLiveTogether', v)}
+                          />
+                        </div>
+                      )}
 
-                  <TimeSlider
-                    label="Times you see your parents per year"
-                    value={Number(rels.parentVisitsPerYear)}
-                    min={0}
-                    max={52}
-                    step={1}
-                    unit="times/year"
-                    color={CATEGORY_COLORS.parents}
-                    onChange={(v) => $relationships.setKey('parentVisitsPerYear', String(v))}
-                  />
+                      <TimeSlider
+                        label={`Your ${parentLabel}'s current age`}
+                        value={Number(rels.parentsAge)}
+                        min={30}
+                        max={100}
+                        step={1}
+                        unit="years"
+                        color={CATEGORY_COLORS.parents}
+                        onChange={(v) => $relationships.setKey('parentsAge', String(v))}
+                      />
 
-                  <div
-                    className="rounded-xl p-5"
-                    style={{
-                      backgroundColor: 'var(--th-surface)',
-                      border: '1px solid var(--th-border)',
-                    }}
-                  >
-                    <p className="text-xs leading-relaxed" style={{ color: 'var(--th-text-muted)' }}>
-                      If your parents are {rels.parentsAge} and you see them{' '}
-                      {rels.parentVisitsPerYear} times a year, you have roughly{' '}
-                      <strong style={{ color: CATEGORY_COLORS.parents }}>
-                        {Math.max(0, Math.round((Number(rels.parentsLifeExpectancy) - Number(rels.parentsAge)) * Number(rels.parentVisitsPerYear)))}
-                      </strong>{' '}
-                      visits left.
-                    </p>
-                  </div>
-                </div>
+                      <TimeSlider
+                        label={`${parentsAlive === 'one' ? "Parent's" : "Parents'"} life expectancy`}
+                        value={Number(rels.parentsLifeExpectancy)}
+                        min={50}
+                        max={100}
+                        step={1}
+                        unit="years"
+                        color={CATEGORY_COLORS.parents}
+                        onChange={(v) => $relationships.setKey('parentsLifeExpectancy', String(v))}
+                      />
+
+                      <div className="space-y-2">
+                        <TimeSlider
+                          label={`Times you see your ${parentLabel} per year`}
+                          value={parentVisits}
+                          min={0}
+                          max={52}
+                          step={1}
+                          unit="times/year"
+                          color={CATEGORY_COLORS.parents}
+                          onChange={(v) => $relationships.setKey('parentVisitsPerYear', String(v))}
+                        />
+                        {getComparison('parentVisits', parentVisits) && (
+                          <motion.p
+                            className="text-[11px] pl-1"
+                            style={{ color: CATEGORY_COLORS.parents }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            key={parentVisits}
+                          >
+                            {getComparison('parentVisits', parentVisits)}
+                          </motion.p>
+                        )}
+                      </div>
+
+                      <Hint>
+                        {AVERAGES.parentVisits.label} You have roughly{' '}
+                        <strong style={{ color: CATEGORY_COLORS.parents }}>
+                          {visitsLeft} visits
+                        </strong>{' '}
+                        left. Make them count.
+                      </Hint>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             )}
 
@@ -256,7 +414,7 @@ export default function Onboarding() {
             {step === 3 && (
               <div className="space-y-10">
                 <div className="text-center space-y-3">
-                  <h1 className="text-3xl font-medium" style={{ color: 'var(--th-text)' }}>
+                  <h1 className="text-2xl sm:text-3xl font-medium" style={{ color: 'var(--th-text)' }}>
                     Screen time
                   </h1>
                   <p className="text-sm leading-relaxed" style={{ color: 'var(--th-text-muted)' }}>
@@ -265,31 +423,37 @@ export default function Onboarding() {
                 </div>
 
                 <div className="space-y-8">
-                  <TimeSlider
-                    label="Phone / screen time"
-                    value={Number(rels.phoneHoursPerDay)}
-                    min={0}
-                    max={12}
-                    step={0.5}
-                    unit="hrs/day"
-                    color={CATEGORY_COLORS.phone}
-                    onChange={(v) => $relationships.setKey('phoneHoursPerDay', String(v))}
-                  />
-
-                  <div
-                    className="rounded-xl p-5 space-y-3"
-                    style={{
-                      backgroundColor: 'var(--th-surface)',
-                      border: '1px solid var(--th-border)',
-                    }}
-                  >
-                    <p className="text-xs leading-relaxed" style={{ color: 'var(--th-text-muted)' }}>
-                      The average person spends ~4 hours/day on their phone.
-                      That's roughly <strong style={{ color: CATEGORY_COLORS.phone }}>
-                        {Math.round((Number(rels.phoneHoursPerDay) / 24) * 365)} days per year
-                      </strong> — just staring at a screen.
-                    </p>
+                  <div className="space-y-2">
+                    <TimeSlider
+                      label="Phone / screen time"
+                      value={phoneHrs}
+                      min={0}
+                      max={12}
+                      step={0.5}
+                      unit="hrs/day"
+                      color={CATEGORY_COLORS.phone}
+                      onChange={(v) => $relationships.setKey('phoneHoursPerDay', String(v))}
+                    />
+                    {getComparison('phone', phoneHrs) && (
+                      <motion.p
+                        className="text-[11px] pl-1"
+                        style={{ color: CATEGORY_COLORS.phone }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        key={phoneHrs}
+                      >
+                        {getComparison('phone', phoneHrs)}
+                      </motion.p>
+                    )}
                   </div>
+
+                  <Hint>
+                    {AVERAGES.phone.label} At {phoneHrs} hrs/day, that's about{' '}
+                    <strong style={{ color: CATEGORY_COLORS.phone }}>
+                      {Math.round((phoneHrs / 24) * 365)} days per year
+                    </strong>{' '}
+                    just on a screen.
+                  </Hint>
                 </div>
               </div>
             )}
@@ -298,7 +462,7 @@ export default function Onboarding() {
             {step === 4 && (
               <div className="space-y-10">
                 <div className="text-center space-y-3">
-                  <h1 className="text-3xl font-medium" style={{ color: 'var(--th-text)' }}>
+                  <h1 className="text-2xl sm:text-3xl font-medium" style={{ color: 'var(--th-text)' }}>
                     Your typical day
                   </h1>
                   <p className="text-sm leading-relaxed" style={{ color: 'var(--th-text-muted)' }}>
@@ -308,18 +472,34 @@ export default function Onboarding() {
 
                 <div className="space-y-5">
                   {(Object.keys(allocation) as Array<keyof typeof allocation>).map(
-                    (key) => (
-                      <TimeSlider
-                        key={key}
-                        label={CATEGORY_LABELS[key] || key}
-                        value={Number(allocation[key])}
-                        min={0}
-                        max={16}
-                        step={0.5}
-                        color={CATEGORY_COLORS[key]}
-                        onChange={(v) => $timeAllocation.setKey(key, String(v))}
-                      />
-                    )
+                    (key) => {
+                      const val = Number(allocation[key]);
+                      const remark = getComparison(key, val);
+                      return (
+                        <div key={key} className="space-y-1">
+                          <TimeSlider
+                            label={CATEGORY_LABELS[key] || key}
+                            value={val}
+                            min={0}
+                            max={16}
+                            step={0.5}
+                            color={CATEGORY_COLORS[key]}
+                            onChange={(v) => $timeAllocation.setKey(key, String(v))}
+                          />
+                          {remark && (
+                            <motion.p
+                              className="text-[10px] pl-1"
+                              style={{ color: CATEGORY_COLORS[key] }}
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              key={`${key}-${val}`}
+                            >
+                              {remark}
+                            </motion.p>
+                          )}
+                        </div>
+                      );
+                    }
                   )}
                 </div>
 
@@ -348,6 +528,11 @@ export default function Onboarding() {
                       {totalAllocated}/24 hrs
                     </span>
                   </div>
+                  {totalAllocated > 24 && (
+                    <p className="text-[10px] mt-2" style={{ color: '#e06c75' }}>
+                      That's more than 24 hours — you may be double-counting some time.
+                    </p>
+                  )}
                 </div>
               </div>
             )}
@@ -379,6 +564,6 @@ export default function Onboarding() {
           </button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

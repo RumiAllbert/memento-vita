@@ -1,0 +1,14 @@
+---
+import Layout from '../layouts/Layout.astro';
+import RevealExperience from '../components/RevealExperience.tsx';
+---
+
+<Layout title="Memento Vita — Your Life Revealed">
+  <RevealExperience client:load />
+
+  <script>
+    if (typeof window !== 'undefined' && localStorage.getItem('onboarded') !== 'true') {
+      window.location.href = '/';
+    }
+  </script>
+</Layout>

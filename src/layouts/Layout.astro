@@ -3,21 +3,35 @@ interface Props {
   title?: string;
 }
 
-const { title = 'Memento Mori — Life Calendar' } = Astro.props;
+const { title = 'Memento Vita — Life Calendar' } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en" class="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Visualize your life as a grid of weeks. Make time tangible." />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={Astro.url} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content="Visualize your life as a grid of weeks. Make time tangible." />
+    <meta property="og:image" content="/assets/social-image.png" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={Astro.url} />
+    <meta property="twitter:title" content={title} />
+    <meta property="twitter:description" content="Visualize your life as a grid of weeks. Make time tangible." />
+    <meta property="twitter:image" content="/assets/social-image.png" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
     <title>{title}</title>
     <script is:inline>
       // Apply saved theme instantly to prevent flash
       (function() {
-        const theme = localStorage.getItem('theme') || 'dark';
+        const theme = localStorage.getItem('theme') || 'light';
         document.documentElement.className = theme;
       })();
     </script>

@@ -25,19 +25,7 @@
 }
 
 @theme {
-  --color-bg: #0a0a0a;
-  --color-surface: #141414;
-  --color-surface-raised: #1a1a1a;
-  --color-text-primary: #e5e5e5;
-  --color-text-muted: #737373;
-  --color-accent: #f5f5f5;
-  --color-accent-inv: #0a0a0a;
-  --color-lived: #404040;
-  --color-current: #e5e5e5;
-  --color-future: #1a1a1a;
-  --color-future-border: #262626;
-  --color-slider-thumb: #e5e5e5;
-  --color-slider-thumb-border: #0a0a0a;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
   --color-cat-sleep: #8b7355;
   --color-cat-work: #6b8f71;
   --color-cat-family: #7b6d8e;
@@ -47,25 +35,30 @@
   --color-cat-chores: #7a7a7a;
   --color-cat-parents: #9b8579;
   --color-cat-phone: #e06c75;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 html {
   font-family: var(--font-mono);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+body {
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--th-bg);
+  color: var(--th-text);
+}
+
+/* ===== THEME: Dark — pure neutral ===== */
 html.dark {
-  background-color: #0a0a0a;
-  color: #e5e5e5;
   color-scheme: dark;
   --th-bg: #0a0a0a;
   --th-surface: #141414;
-  --th-surface-raised: #1a1a1a;
   --th-text: #e5e5e5;
   --th-text-muted: #737373;
   --th-accent: #f5f5f5;
@@ -77,51 +70,105 @@ html.dark {
   --th-slider-thumb: #e5e5e5;
   --th-slider-border: #0a0a0a;
   --th-current-shadow: rgba(229, 229, 229, 0.4);
-  --th-phase-childhood: rgba(139, 115, 85, 0.06);
-  --th-phase-education: rgba(107, 143, 113, 0.06);
-  --th-phase-career: rgba(123, 109, 142, 0.06);
-  --th-phase-retirement: rgba(143, 107, 107, 0.06);
 }
 
+/* ===== THEME: Light — clean white ===== */
 html.light {
-  background-color: #fafafa;
-  color: #1a1a1a;
   color-scheme: light;
-  --th-bg: #fafafa;
+  --th-bg: #f8f8f8;
   --th-surface: #ffffff;
-  --th-surface-raised: #f5f5f5;
-  --th-text: #1a1a1a;
-  --th-text-muted: #8a8a8a;
-  --th-accent: #1a1a1a;
+  --th-text: #171717;
+  --th-text-muted: #a3a3a3;
+  --th-accent: #171717;
   --th-accent-inv: #ffffff;
-  --th-lived: #b0b0b0;
-  --th-current: #1a1a1a;
+  --th-lived: #a3a3a3;
+  --th-current: #171717;
   --th-future: #f0f0f0;
-  --th-border: #e0e0e0;
-  --th-slider-thumb: #1a1a1a;
+  --th-border: #e5e5e5;
+  --th-slider-thumb: #171717;
   --th-slider-border: #ffffff;
-  --th-current-shadow: rgba(26, 26, 26, 0.3);
-  --th-phase-childhood: rgba(139, 115, 85, 0.08);
-  --th-phase-education: rgba(107, 143, 113, 0.08);
-  --th-phase-career: rgba(123, 109, 142, 0.08);
-  --th-phase-retirement: rgba(143, 107, 107, 0.08);
+  --th-current-shadow: rgba(23, 23, 23, 0.25);
 }
 
-body {
-  margin: 0;
-  min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: var(--th-bg);
-  color: var(--th-text);
+/* ===== THEME: Sepia — warm paper, like a worn book ===== */
+html.sepia {
+  color-scheme: light;
+  --th-bg: #f7f3ec;
+  --th-surface: #ffffff;
+  --th-text: #44392c;
+  --th-text-muted: #a09382;
+  --th-accent: #44392c;
+  --th-accent-inv: #f7f3ec;
+  --th-lived: #c4b49a;
+  --th-current: #44392c;
+  --th-future: #f0ebe3;
+  --th-border: #e2d9cb;
+  --th-slider-thumb: #44392c;
+  --th-slider-border: #f7f3ec;
+  --th-current-shadow: rgba(68, 57, 44, 0.3);
 }
 
+/* ===== THEME: Ocean — dark slate with cool blue accent ===== */
+html.ocean {
+  color-scheme: dark;
+  --th-bg: #0f1318;
+  --th-surface: #181d24;
+  --th-text: #d4dce6;
+  --th-text-muted: #6b7a8d;
+  --th-accent: #6cb4d9;
+  --th-accent-inv: #0f1318;
+  --th-lived: #3a4550;
+  --th-current: #6cb4d9;
+  --th-future: #1c2128;
+  --th-border: #2a3240;
+  --th-slider-thumb: #6cb4d9;
+  --th-slider-border: #0f1318;
+  --th-current-shadow: rgba(108, 180, 217, 0.35);
+}
+
+/* ===== THEME: Forest — dark charcoal with muted green accent ===== */
+html.forest {
+  color-scheme: dark;
+  --th-bg: #101210;
+  --th-surface: #191c19;
+  --th-text: #d2dcd4;
+  --th-text-muted: #6e8a72;
+  --th-accent: #82b888;
+  --th-accent-inv: #101210;
+  --th-lived: #3a4a3c;
+  --th-current: #82b888;
+  --th-future: #1c201c;
+  --th-border: #2a332b;
+  --th-slider-thumb: #82b888;
+  --th-slider-border: #101210;
+  --th-current-shadow: rgba(130, 184, 136, 0.3);
+}
+
+/* ===== THEME: Rose — dark neutral with soft pink accent ===== */
+html.rose {
+  color-scheme: dark;
+  --th-bg: #121012;
+  --th-surface: #1c191c;
+  --th-text: #ddd2da;
+  --th-text-muted: #8a7886;
+  --th-accent: #d4889e;
+  --th-accent-inv: #121012;
+  --th-lived: #4a3e48;
+  --th-current: #d4889e;
+  --th-future: #1e1b1e;
+  --th-border: #302a30;
+  --th-slider-thumb: #d4889e;
+  --th-slider-border: #121012;
+  --th-current-shadow: rgba(212, 136, 158, 0.3);
+}
+
+/* ===== Animations ===== */
 @keyframes pulse-glow {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
 }
 
-/* Range input styling */
+/* ===== Range input ===== */
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
@@ -155,38 +202,25 @@ input[type="range"]::-moz-range-thumb {
   cursor: pointer;
   border: 2px solid var(--th-slider-border);
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-  transition: transform 0.15s ease;
 }
 
-/* Date input styling */
-input[type="date"] {
-  color-scheme: inherit;
-}
+input[type="date"] { color-scheme: inherit; }
 
-.dark input[type="date"]::-webkit-calendar-picker-indicator {
+.dark input[type="date"]::-webkit-calendar-picker-indicator,
+.ocean input[type="date"]::-webkit-calendar-picker-indicator,
+.forest input[type="date"]::-webkit-calendar-picker-indicator,
+.rose input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(0.7);
   cursor: pointer;
 }
 
-.light input[type="date"]::-webkit-calendar-picker-indicator {
+.light input[type="date"]::-webkit-calendar-picker-indicator,
+.sepia input[type="date"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--th-border);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--th-lived);
-}
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--th-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--th-lived); }

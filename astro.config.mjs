@@ -5,7 +5,7 @@ import tailwindcss from '@tailwindcss/vite';
 import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
-  site: 'https://mementovita.vercel.app',
+  site: 'https://mementovitae.vercel.app',
   integrations: [
     react(),
     sitemap(),

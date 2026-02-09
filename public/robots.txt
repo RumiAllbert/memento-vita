@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://mementovita.vercel.app/sitemap-index.xml
+Sitemap: https://mementovitae.vercel.app/sitemap-index.xml

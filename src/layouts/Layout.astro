@@ -4,7 +4,7 @@ interface Props {
   description?: string;
 }
 
-const SITE_URL = 'https://mementovita.vercel.app';
+const SITE_URL = 'https://mementovitae.vercel.app';
 const DEFAULT_TITLE = 'Memento Vitae — Visualize Your';
 const DEFAULT_DESCRIPTION = 'Your life is about 4,000 weeks. See how many you have left.';
 
@@ -75,9 +75,9 @@ const jsonLd = {
     <meta name="twitter:image:alt" content="Memento Vitae — Your life visualized as a grid of weeks" />
 
     <!-- Favicons -->
-    <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
 
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />

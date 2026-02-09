@@ -29,7 +29,7 @@ npm run dev
 
 Open [localhost:4321](http://localhost:4321). The onboarding takes about a minute.
 
-Or try the live version at **[mementovita.vercel.app](https://mementovita.vercel.app/)**.
+Or try the live version at **[mementovitae.vercel.app](https://mementovitae.vercel.app/)**.
 
 ## The Onboarding
 

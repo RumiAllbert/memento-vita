@@ -1,0 +1,192 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/JetBrainsMono-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/JetBrainsMono-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/JetBrainsMono-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  --color-bg: #0a0a0a;
+  --color-surface: #141414;
+  --color-surface-raised: #1a1a1a;
+  --color-text-primary: #e5e5e5;
+  --color-text-muted: #737373;
+  --color-accent: #f5f5f5;
+  --color-accent-inv: #0a0a0a;
+  --color-lived: #404040;
+  --color-current: #e5e5e5;
+  --color-future: #1a1a1a;
+  --color-future-border: #262626;
+  --color-slider-thumb: #e5e5e5;
+  --color-slider-thumb-border: #0a0a0a;
+  --color-cat-sleep: #8b7355;
+  --color-cat-work: #6b8f71;
+  --color-cat-family: #7b6d8e;
+  --color-cat-partner: #8f6b6b;
+  --color-cat-hobbies: #6b7e8f;
+  --color-cat-health: #8f8b6b;
+  --color-cat-chores: #7a7a7a;
+  --color-cat-parents: #9b8579;
+  --color-cat-phone: #e06c75;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--font-mono);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+html.dark {
+  background-color: #0a0a0a;
+  color: #e5e5e5;
+  color-scheme: dark;
+  --th-bg: #0a0a0a;
+  --th-surface: #141414;
+  --th-surface-raised: #1a1a1a;
+  --th-text: #e5e5e5;
+  --th-text-muted: #737373;
+  --th-accent: #f5f5f5;
+  --th-accent-inv: #0a0a0a;
+  --th-lived: #404040;
+  --th-current: #e5e5e5;
+  --th-future: #1a1a1a;
+  --th-border: #262626;
+  --th-slider-thumb: #e5e5e5;
+  --th-slider-border: #0a0a0a;
+  --th-current-shadow: rgba(229, 229, 229, 0.4);
+  --th-phase-childhood: rgba(139, 115, 85, 0.06);
+  --th-phase-education: rgba(107, 143, 113, 0.06);
+  --th-phase-career: rgba(123, 109, 142, 0.06);
+  --th-phase-retirement: rgba(143, 107, 107, 0.06);
+}
+
+html.light {
+  background-color: #fafafa;
+  color: #1a1a1a;
+  color-scheme: light;
+  --th-bg: #fafafa;
+  --th-surface: #ffffff;
+  --th-surface-raised: #f5f5f5;
+  --th-text: #1a1a1a;
+  --th-text-muted: #8a8a8a;
+  --th-accent: #1a1a1a;
+  --th-accent-inv: #ffffff;
+  --th-lived: #b0b0b0;
+  --th-current: #1a1a1a;
+  --th-future: #f0f0f0;
+  --th-border: #e0e0e0;
+  --th-slider-thumb: #1a1a1a;
+  --th-slider-border: #ffffff;
+  --th-current-shadow: rgba(26, 26, 26, 0.3);
+  --th-phase-childhood: rgba(139, 115, 85, 0.08);
+  --th-phase-education: rgba(107, 143, 113, 0.08);
+  --th-phase-career: rgba(123, 109, 142, 0.08);
+  --th-phase-retirement: rgba(143, 107, 107, 0.08);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--th-bg);
+  color: var(--th-text);
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Range input styling */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--th-slider-thumb);
+  cursor: pointer;
+  border: 2px solid var(--th-slider-border);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  transition: transform 0.15s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--th-slider-thumb);
+  cursor: pointer;
+  border: 2px solid var(--th-slider-border);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  transition: transform 0.15s ease;
+}
+
+/* Date input styling */
+input[type="date"] {
+  color-scheme: inherit;
+}
+
+.dark input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.7);
+  cursor: pointer;
+}
+
+.light input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--th-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--th-lived);
+}

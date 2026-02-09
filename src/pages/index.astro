@@ -1,0 +1,16 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Onboarding from '../components/Onboarding.tsx';
+---
+
+<Layout title="Memento Mori — Begin">
+  <div id="app-root">
+    <Onboarding client:load />
+  </div>
+  <script>
+    // If user has already onboarded, redirect to dashboard
+    if (typeof window !== 'undefined' && localStorage.getItem('onboarded') === 'true') {
+      window.location.href = '/dashboard';
+    }
+  </script>
+</Layout>

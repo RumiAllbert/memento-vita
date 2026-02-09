@@ -1,0 +1,48 @@
+---
+import Layout from '../layouts/Layout.astro';
+import StatsBar from '../components/StatsBar.tsx';
+import LifeGrid from '../components/LifeGrid.tsx';
+import CategoryBreakdown from '../components/CategoryBreakdown.tsx';
+---
+
+<Layout title="Memento Mori — Your Life">
+  <div class="max-w-6xl mx-auto px-4 py-8 space-y-6">
+    <!-- Header -->
+    <header class="flex items-center justify-between">
+      <div>
+        <h1 class="text-lg font-medium text-text-primary">Memento Mori</h1>
+        <p class="text-xs text-text-muted mt-0.5">Your life in weeks</p>
+      </div>
+      <a
+        href="/"
+        id="edit-btn"
+        class="text-xs text-text-muted hover:text-text-primary transition-colors border border-future-border rounded-lg px-3 py-1.5"
+      >
+        Edit Settings
+      </a>
+    </header>
+
+    <!-- Stats -->
+    <StatsBar client:load />
+
+    <!-- Main grid + sidebar -->
+    <div class="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+      <LifeGrid client:load />
+      <CategoryBreakdown client:load />
+    </div>
+  </div>
+
+  <script>
+    // Redirect to onboarding if no data
+    if (typeof window !== 'undefined' && localStorage.getItem('onboarded') !== 'true') {
+      window.location.href = '/';
+    }
+
+    // Edit button clears onboarded flag to show onboarding form
+    document.getElementById('edit-btn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      localStorage.setItem('onboarded', 'false');
+      window.location.href = '/';
+    });
+  </script>
+</Layout>

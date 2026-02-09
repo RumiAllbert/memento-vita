@@ -45,12 +45,12 @@ function PillSelector<T extends string>({
 
 const slideVariants = {
   enter: (direction: number) => ({
-    x: direction > 0 ? 200 : -200,
+    x: direction > 0 ? 80 : -80,
     opacity: 0,
   }),
   center: { x: 0, opacity: 1 },
   exit: (direction: number) => ({
-    x: direction > 0 ? -200 : 200,
+    x: direction > 0 ? -80 : 80,
     opacity: 0,
   }),
 };
@@ -164,9 +164,9 @@ export default function Onboarding() {
         <ThemeToggle />
       </div>
 
-      <div className="w-full max-w-lg">
+      <div className="w-full max-w-lg overflow-hidden">
         {/* Progress bar */}
-        <div className="flex justify-center gap-2.5 mb-16">
+        <div className="flex justify-center gap-2.5 mb-10 sm:mb-16">
           {Array.from({ length: STEPS }).map((_, i) => (
             <div
               key={i}
@@ -191,7 +191,7 @@ export default function Onboarding() {
           >
             {/* Step 0: Name + Birth Date + Life Expectancy */}
             {step === 0 && (
-              <div className="space-y-10">
+              <div className="space-y-6 sm:space-y-10">
                 <div className="text-center space-y-3">
                   <h1 className="text-2xl sm:text-3xl font-medium" style={{ color: 'var(--th-text)' }}>
                     Let's begin
@@ -257,7 +257,7 @@ export default function Onboarding() {
 
             {/* Step 1: Retirement */}
             {step === 1 && (
-              <div className="space-y-10">
+              <div className="space-y-6 sm:space-y-10">
                 <div className="text-center space-y-3">
                   <h1 className="text-2xl sm:text-3xl font-medium" style={{ color: 'var(--th-text)' }}>
                     When will you retire?
@@ -288,7 +288,7 @@ export default function Onboarding() {
 
             {/* Step 2: Relationships */}
             {step === 2 && (
-              <div className="space-y-10">
+              <div className="space-y-6 sm:space-y-10">
                 <div className="text-center space-y-3">
                   <h1 className="text-2xl sm:text-3xl font-medium" style={{ color: 'var(--th-text)' }}>
                     Your relationships
@@ -412,7 +412,7 @@ export default function Onboarding() {
 
             {/* Step 3: Phone / Screen Time */}
             {step === 3 && (
-              <div className="space-y-10">
+              <div className="space-y-6 sm:space-y-10">
                 <div className="text-center space-y-3">
                   <h1 className="text-2xl sm:text-3xl font-medium" style={{ color: 'var(--th-text)' }}>
                     Screen time
@@ -460,7 +460,7 @@ export default function Onboarding() {
 
             {/* Step 4: Daily Time Allocation */}
             {step === 4 && (
-              <div className="space-y-10">
+              <div className="space-y-6 sm:space-y-10">
                 <div className="text-center space-y-3">
                   <h1 className="text-2xl sm:text-3xl font-medium" style={{ color: 'var(--th-text)' }}>
                     Your typical day
@@ -540,10 +540,10 @@ export default function Onboarding() {
         </AnimatePresence>
 
         {/* Navigation */}
-        <div className="flex justify-between mt-16">
+        <div className="flex justify-between mt-10 sm:mt-16">
           <button
             onClick={prev}
-            className="px-6 py-3 text-sm rounded-lg transition-colors"
+            className="px-4 sm:px-6 py-3 text-sm rounded-lg transition-colors"
             style={{
               visibility: step > 0 ? 'visible' : 'hidden',
               color: 'var(--th-text-muted)',
@@ -554,7 +554,7 @@ export default function Onboarding() {
           <button
             onClick={next}
             disabled={step === 0 && !isStep1Valid}
-            className="px-8 py-3 text-sm rounded-lg font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            className="px-6 sm:px-8 py-3 text-sm rounded-lg font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed"
             style={{
               backgroundColor: 'var(--th-accent)',
               color: 'var(--th-accent-inv)',

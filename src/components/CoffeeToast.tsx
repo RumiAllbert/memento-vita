@@ -1,20 +1,27 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const COOLDOWN_MS = 3 * 24 * 60 * 60 * 1000; // 3 days
+
 export default function CoffeeToast() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    const dismissed = localStorage.getItem('coffee-dismissed');
-    if (dismissed) return;
+    const last = localStorage.getItem('coffee-dismissed-at');
+    if (last && Date.now() - Number(last) < COOLDOWN_MS) return;
 
-    const timer = setTimeout(() => setShow(true), 12000);
+    // Wait longer if share toast might be showing
+    const shareLast = localStorage.getItem('share-dismissed-at');
+    const shareOnCooldown = shareLast && Date.now() - Number(shareLast) < 2 * 24 * 60 * 60 * 1000;
+    const delay = shareOnCooldown ? 15000 : 45000;
+
+    const timer = setTimeout(() => setShow(true), delay);
     return () => clearTimeout(timer);
   }, []);
 
   const dismiss = () => {
     setShow(false);
-    localStorage.setItem('coffee-dismissed', 'true');
+    localStorage.setItem('coffee-dismissed-at', String(Date.now()));
   };
 
   return (

@@ -173,6 +173,7 @@ export default function ExportPoster() {
   return (
     <button
       onClick={exportPNG}
+      data-export-poster
       className="flex items-center gap-2 text-xs px-4 py-2 rounded-lg transition-colors"
       style={{ color: 'var(--th-text-muted)', border: '1px solid var(--th-border)' }}
     >

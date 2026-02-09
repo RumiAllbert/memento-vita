@@ -7,6 +7,7 @@ import InsightCards from '../components/InsightCards.tsx';
 import ThemeToggle from '../components/ThemeToggle.tsx';
 import ExportPoster from '../components/ExportPoster.tsx';
 import CoffeeToast from '../components/CoffeeToast.tsx';
+import ShareToast from '../components/ShareToast.tsx';
 ---
 
 <Layout title="Memento Vita — Your Life">
@@ -66,7 +67,8 @@ import CoffeeToast from '../components/CoffeeToast.tsx';
     </footer>
   </div>
 
-  <!-- Coffee toast -->
+  <!-- Toasts -->
+  <ShareToast client:load />
   <CoffeeToast client:load />
 
   <script>

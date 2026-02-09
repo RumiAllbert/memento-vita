@@ -1,26 +1,45 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useStore } from '@nanostores/react';
+import { $activeToast } from '../stores/toast';
 
 const COOLDOWN_MS = 3 * 24 * 60 * 60 * 1000; // 3 days
 
 export default function CoffeeToast() {
   const [show, setShow] = useState(false);
+  const activeToast = useStore($activeToast);
 
   useEffect(() => {
     const last = localStorage.getItem('coffee-dismissed-at');
     if (last && Date.now() - Number(last) < COOLDOWN_MS) return;
 
-    // Wait longer if share toast might be showing
-    const shareLast = localStorage.getItem('share-dismissed-at');
-    const shareOnCooldown = shareLast && Date.now() - Number(shareLast) < 2 * 24 * 60 * 60 * 1000;
-    const delay = shareOnCooldown ? 15000 : 45000;
+    let retryTimer: ReturnType<typeof setInterval>;
 
-    const timer = setTimeout(() => setShow(true), delay);
-    return () => clearTimeout(timer);
+    const tryShow = () => {
+      if ($activeToast.get() === null) {
+        setShow(true);
+        $activeToast.set('coffee');
+        if (retryTimer) clearInterval(retryTimer);
+      }
+    };
+
+    const timer = setTimeout(() => {
+      if ($activeToast.get() === null) {
+        tryShow();
+      } else {
+        retryTimer = setInterval(tryShow, 5000);
+      }
+    }, 45000);
+
+    return () => {
+      clearTimeout(timer);
+      if (retryTimer) clearInterval(retryTimer);
+    };
   }, []);
 
   const dismiss = () => {
     setShow(false);
+    $activeToast.set(null);
     localStorage.setItem('coffee-dismissed-at', String(Date.now()));
   };
 

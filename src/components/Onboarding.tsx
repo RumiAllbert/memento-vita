@@ -1,11 +1,27 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '@nanostores/react';
-import { $lifeConfig, $timeAllocation, $relationships, $hasOnboarded } from '../stores/life';
+import {
+  $lifeConfig,
+  $timeAllocation,
+  $relationships,
+  $hasOnboarded,
+  $customCategories,
+  $parsedCustomCategories,
+} from '../stores/life';
 import TimeSlider from './TimeSlider';
 import ThemeToggle from './ThemeToggle';
 import IntroAnimation from './IntroAnimation';
-import { CATEGORY_COLORS, CATEGORY_LABELS, DEFAULT_PARENTS_ALIVE, DEFAULT_PARENTS_LIVE_TOGETHER } from '../lib/constants';
+import {
+  CATEGORY_COLORS,
+  CATEGORY_LABELS,
+  CUSTOM_CATEGORY_PALETTE,
+  MAX_CUSTOM_CATEGORIES,
+  getCategoryColor,
+  getCategoryLabel,
+  getCategoryEmoji,
+  type CustomCategory,
+} from '../lib/constants';
 import { AVERAGES, getComparison } from '../lib/stats';
 
 // ---- PillSelector ----
@@ -82,9 +98,16 @@ export default function Onboarding() {
   const config = useStore($lifeConfig);
   const allocation = useStore($timeAllocation);
   const rels = useStore($relationships);
+  const customCats = useStore($parsedCustomCategories);
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
   const [showIntro, setShowIntro] = useState(true);
+
+  // Custom category form state
+  const [showCatForm, setShowCatForm] = useState(false);
+  const [catName, setCatName] = useState('');
+  const [catEmoji, setCatEmoji] = useState('');
+  const [catColor, setCatColor] = useState(CUSTOM_CATEGORY_PALETTE[0]);
 
   const next = () => {
     if (step < STEPS - 1) {
@@ -103,10 +126,9 @@ export default function Onboarding() {
     }
   };
 
-  const totalAllocated = Object.values(allocation).reduce(
-    (sum, val) => sum + Number(val),
-    0
-  );
+  const totalAllocated =
+    Object.values(allocation).reduce((sum, val) => sum + Number(val), 0) +
+    customCats.reduce((sum, cat) => sum + cat.hours, 0);
 
   const isStep1Valid = (config.name || '').trim() !== '' && config.birthDate !== '';
 
@@ -115,25 +137,47 @@ export default function Onboarding() {
 
   const lifeExp = Number(config.lifeExpectancy);
   const retAge = Number(config.retirementAge);
-  const parentVisits = Number(rels.parentVisitsPerYear);
   const phoneHrs = Number(rels.phoneHoursPerDay);
-  const parentsAlive = (rels.parentsAlive || DEFAULT_PARENTS_ALIVE) as 'both' | 'one' | 'neither';
-  const parentsLiveTogether = (rels.parentsLiveTogether || DEFAULT_PARENTS_LIVE_TOGETHER) as 'true' | 'false';
+  const motherAlive = (rels.motherAlive || 'true') as 'true' | 'false';
+  const fatherAlive = (rels.fatherAlive || 'true') as 'true' | 'false';
+  const anyParentAlive = motherAlive === 'true' || fatherAlive === 'true';
 
-  const rawVisits = Math.max(
-    0,
-    Math.round(
-      (Number(rels.parentsLifeExpectancy) - Number(rels.parentsAge)) * parentVisits
-    )
-  );
-  const visitsLeft =
-    parentsAlive === 'neither'
-      ? 0
-      : parentsAlive === 'both' && parentsLiveTogether === 'false'
-        ? rawVisits * 2
-        : rawVisits;
+  // Compute visits for hint
+  const motherVisits = motherAlive === 'true'
+    ? Math.max(0, Math.round((Number(rels.motherLifeExpectancy) - Number(rels.motherAge)) * Number(rels.motherVisitsPerYear)))
+    : 0;
+  const fatherVisits = fatherAlive === 'true'
+    ? Math.max(0, Math.round((Number(rels.fatherLifeExpectancy) - Number(rels.fatherAge)) * Number(rels.fatherVisitsPerYear)))
+    : 0;
+  const totalVisitsLeft = motherVisits + fatherVisits;
 
-  const parentLabel = parentsAlive === 'one' ? 'parent' : 'parents';
+  const addCustomCategory = () => {
+    if (!catName.trim() || !catEmoji.trim()) return;
+    const id = 'custom-' + catName.trim().toLowerCase().replace(/\s+/g, '-') + '-' + Date.now();
+    const newCat: CustomCategory = {
+      id,
+      label: catName.trim(),
+      emoji: catEmoji.trim(),
+      color: catColor,
+      hours: 1,
+    };
+    const updated = [...customCats, newCat];
+    $customCategories.set(JSON.stringify(updated));
+    setCatName('');
+    setCatEmoji('');
+    setCatColor(CUSTOM_CATEGORY_PALETTE[0]);
+    setShowCatForm(false);
+  };
+
+  const removeCustomCategory = (id: string) => {
+    const updated = customCats.filter((c) => c.id !== id);
+    $customCategories.set(JSON.stringify(updated));
+  };
+
+  const updateCustomCategoryHours = (id: string, hours: number) => {
+    const updated = customCats.map((c) => (c.id === id ? { ...c, hours } : c));
+    $customCategories.set(JSON.stringify(updated));
+  };
 
   if (showIntro) {
     return (
@@ -286,127 +330,168 @@ export default function Onboarding() {
               </div>
             )}
 
-            {/* Step 2: Relationships */}
+            {/* Step 2: Relationships (split mother/father) */}
             {step === 2 && (
               <div className="space-y-6 sm:space-y-10">
                 <div className="text-center space-y-3">
                   <h1 className="text-2xl sm:text-3xl font-medium" style={{ color: 'var(--th-text)' }}>
-                    Your relationships
+                    Your parents
                   </h1>
                   <p className="text-sm leading-relaxed" style={{ color: 'var(--th-text-muted)' }}>
-                    Are your parents still around?
+                    Tell us about your parents so we can estimate visits remaining.
                   </p>
                 </div>
 
-                <PillSelector
-                  options={[
-                    { value: 'both' as const, label: 'Both parents' },
-                    { value: 'one' as const, label: 'One parent' },
-                    { value: 'neither' as const, label: 'Neither' },
-                  ]}
-                  value={parentsAlive}
-                  onChange={(v) => $relationships.setKey('parentsAlive', v)}
-                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {/* Mother */}
+                  <div className="space-y-4">
+                    <div
+                      className="flex items-center justify-between rounded-xl px-4 py-3"
+                      style={{
+                        backgroundColor: 'var(--th-surface)',
+                        border: '1px solid var(--th-border)',
+                      }}
+                    >
+                      <span className="text-xs" style={{ color: 'var(--th-text-muted)' }}>
+                        Is your mother alive?
+                      </span>
+                      <PillSelector
+                        options={[
+                          { value: 'true' as const, label: 'Yes' },
+                          { value: 'false' as const, label: 'No' },
+                        ]}
+                        value={motherAlive}
+                        onChange={(v) => $relationships.setKey('motherAlive', v)}
+                      />
+                    </div>
 
-                <AnimatePresence mode="wait">
-                  {parentsAlive === 'neither' ? (
-                    <motion.div
-                      key="neither"
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -6 }}
-                      transition={{ duration: 0.25 }}
-                    >
-                      <Hint>
-                        We're sorry for your loss. We'll skip parent-related sections throughout the app.
-                      </Hint>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="alive"
-                      className="space-y-6"
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -6 }}
-                      transition={{ duration: 0.25 }}
-                    >
-                      {parentsAlive === 'both' && (
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-xl px-4 sm:px-5 py-4"
-                          style={{
-                            backgroundColor: 'var(--th-surface)',
-                            border: '1px solid var(--th-border)',
-                          }}
+                    <AnimatePresence mode="wait">
+                      {motherAlive === 'true' && (
+                        <motion.div
+                          key="mother-fields"
+                          className="space-y-4 pl-2"
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.25 }}
                         >
-                          <span className="text-xs" style={{ color: 'var(--th-text-muted)' }}>
-                            Do they live together?
-                          </span>
-                          <PillSelector
-                            options={[
-                              { value: 'true' as const, label: 'Together' },
-                              { value: 'false' as const, label: 'Apart' },
-                            ]}
-                            value={parentsLiveTogether}
-                            onChange={(v) => $relationships.setKey('parentsLiveTogether', v)}
+                          <TimeSlider
+                            label="Mother's age"
+                            value={Number(rels.motherAge)}
+                            min={30}
+                            max={100}
+                            step={1}
+                            unit="years"
+                            color={CATEGORY_COLORS.parents}
+                            onChange={(v) => $relationships.setKey('motherAge', String(v))}
                           />
-                        </div>
+                          <TimeSlider
+                            label="Mother's life expectancy"
+                            value={Number(rels.motherLifeExpectancy)}
+                            min={50}
+                            max={100}
+                            step={1}
+                            unit="years"
+                            color={CATEGORY_COLORS.parents}
+                            onChange={(v) => $relationships.setKey('motherLifeExpectancy', String(v))}
+                          />
+                          <TimeSlider
+                            label="See mother per year"
+                            value={Number(rels.motherVisitsPerYear)}
+                            min={0}
+                            max={52}
+                            step={1}
+                            unit="times/yr"
+                            color={CATEGORY_COLORS.parents}
+                            onChange={(v) => $relationships.setKey('motherVisitsPerYear', String(v))}
+                          />
+                        </motion.div>
                       )}
+                    </AnimatePresence>
+                  </div>
 
-                      <TimeSlider
-                        label={`Your ${parentLabel}'s current age`}
-                        value={Number(rels.parentsAge)}
-                        min={30}
-                        max={100}
-                        step={1}
-                        unit="years"
-                        color={CATEGORY_COLORS.parents}
-                        onChange={(v) => $relationships.setKey('parentsAge', String(v))}
+                  {/* Father */}
+                  <div className="space-y-4">
+                    <div
+                      className="flex items-center justify-between rounded-xl px-4 py-3"
+                      style={{
+                        backgroundColor: 'var(--th-surface)',
+                        border: '1px solid var(--th-border)',
+                      }}
+                    >
+                      <span className="text-xs" style={{ color: 'var(--th-text-muted)' }}>
+                        Is your father alive?
+                      </span>
+                      <PillSelector
+                        options={[
+                          { value: 'true' as const, label: 'Yes' },
+                          { value: 'false' as const, label: 'No' },
+                        ]}
+                        value={fatherAlive}
+                        onChange={(v) => $relationships.setKey('fatherAlive', v)}
                       />
+                    </div>
 
-                      <TimeSlider
-                        label={`${parentsAlive === 'one' ? "Parent's" : "Parents'"} life expectancy`}
-                        value={Number(rels.parentsLifeExpectancy)}
-                        min={50}
-                        max={100}
-                        step={1}
-                        unit="years"
-                        color={CATEGORY_COLORS.parents}
-                        onChange={(v) => $relationships.setKey('parentsLifeExpectancy', String(v))}
-                      />
+                    <AnimatePresence mode="wait">
+                      {fatherAlive === 'true' && (
+                        <motion.div
+                          key="father-fields"
+                          className="space-y-4 pl-2"
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.25 }}
+                        >
+                          <TimeSlider
+                            label="Father's age"
+                            value={Number(rels.fatherAge)}
+                            min={30}
+                            max={100}
+                            step={1}
+                            unit="years"
+                            color={CATEGORY_COLORS.parents}
+                            onChange={(v) => $relationships.setKey('fatherAge', String(v))}
+                          />
+                          <TimeSlider
+                            label="Father's life expectancy"
+                            value={Number(rels.fatherLifeExpectancy)}
+                            min={50}
+                            max={100}
+                            step={1}
+                            unit="years"
+                            color={CATEGORY_COLORS.parents}
+                            onChange={(v) => $relationships.setKey('fatherLifeExpectancy', String(v))}
+                          />
+                          <TimeSlider
+                            label="See father per year"
+                            value={Number(rels.fatherVisitsPerYear)}
+                            min={0}
+                            max={52}
+                            step={1}
+                            unit="times/yr"
+                            color={CATEGORY_COLORS.parents}
+                            onChange={(v) => $relationships.setKey('fatherVisitsPerYear', String(v))}
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
 
-                      <div className="space-y-2">
-                        <TimeSlider
-                          label={`Times you see your ${parentLabel} per year`}
-                          value={parentVisits}
-                          min={0}
-                          max={52}
-                          step={1}
-                          unit="times/year"
-                          color={CATEGORY_COLORS.parents}
-                          onChange={(v) => $relationships.setKey('parentVisitsPerYear', String(v))}
-                        />
-                        {getComparison('parentVisits', parentVisits) && (
-                          <motion.p
-                            className="text-[11px] pl-1"
-                            style={{ color: CATEGORY_COLORS.parents }}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            key={parentVisits}
-                          >
-                            {getComparison('parentVisits', parentVisits)}
-                          </motion.p>
-                        )}
-                      </div>
-
-                      <Hint>
-                        {AVERAGES.parentVisits.label} You have roughly{' '}
-                        <strong style={{ color: CATEGORY_COLORS.parents }}>
-                          {visitsLeft} visits
-                        </strong>{' '}
-                        left. Make them count.
-                      </Hint>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                {!anyParentAlive ? (
+                  <Hint>
+                    We're sorry for your loss. We'll skip parent-related sections throughout the app.
+                  </Hint>
+                ) : (
+                  <Hint>
+                    {AVERAGES.parentVisits.label} You have roughly{' '}
+                    <strong style={{ color: CATEGORY_COLORS.parents }}>
+                      {totalVisitsLeft} visits
+                    </strong>{' '}
+                    left{motherAlive === 'true' && fatherAlive === 'true' ? ` (Mom: ${motherVisits}, Dad: ${fatherVisits})` : ''}.
+                    Make them count.
+                  </Hint>
+                )}
               </div>
             )}
 
@@ -458,7 +543,7 @@ export default function Onboarding() {
               </div>
             )}
 
-            {/* Step 4: Daily Time Allocation */}
+            {/* Step 4: Daily Time Allocation + Custom Categories */}
             {step === 4 && (
               <div className="space-y-6 sm:space-y-10">
                 <div className="text-center space-y-3">
@@ -500,6 +585,128 @@ export default function Onboarding() {
                         </div>
                       );
                     }
+                  )}
+
+                  {/* Custom categories */}
+                  {customCats.map((cat) => (
+                    <div key={cat.id} className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1">
+                          <TimeSlider
+                            label={`${cat.emoji} ${cat.label}`}
+                            value={cat.hours}
+                            min={0}
+                            max={16}
+                            step={0.5}
+                            color={cat.color}
+                            onChange={(v) => updateCustomCategoryHours(cat.id, v)}
+                          />
+                        </div>
+                        <button
+                          onClick={() => removeCustomCategory(cat.id)}
+                          className="text-xs px-2 py-1 rounded transition-colors shrink-0"
+                          style={{ color: 'var(--th-text-muted)' }}
+                          title="Remove category"
+                        >
+                          &times;
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Add Category button / form */}
+                  {customCats.length < MAX_CUSTOM_CATEGORIES && (
+                    <>
+                      {!showCatForm ? (
+                        <motion.button
+                          onClick={() => setShowCatForm(true)}
+                          className="w-full text-xs py-3 rounded-lg transition-colors"
+                          style={{
+                            color: 'var(--th-text-muted)',
+                            border: '1px dashed var(--th-border)',
+                          }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          + Add Custom Category ({customCats.length}/{MAX_CUSTOM_CATEGORIES})
+                        </motion.button>
+                      ) : (
+                        <motion.div
+                          className="rounded-xl p-4 space-y-3"
+                          style={{
+                            backgroundColor: 'var(--th-surface)',
+                            border: '1px solid var(--th-border)',
+                          }}
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                        >
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              placeholder="Emoji"
+                              value={catEmoji}
+                              onChange={(e) => setCatEmoji(e.target.value)}
+                              className="w-14 rounded-lg px-2 py-2 text-center text-sm focus:outline-none"
+                              style={{
+                                backgroundColor: 'var(--th-bg)',
+                                border: '1px solid var(--th-border)',
+                                color: 'var(--th-text)',
+                              }}
+                              maxLength={4}
+                            />
+                            <input
+                              type="text"
+                              placeholder="Category name"
+                              value={catName}
+                              onChange={(e) => setCatName(e.target.value)}
+                              className="flex-1 rounded-lg px-3 py-2 text-sm focus:outline-none"
+                              style={{
+                                backgroundColor: 'var(--th-bg)',
+                                border: '1px solid var(--th-border)',
+                                color: 'var(--th-text)',
+                              }}
+                              maxLength={20}
+                            />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px]" style={{ color: 'var(--th-text-muted)' }}>
+                              Color:
+                            </span>
+                            {CUSTOM_CATEGORY_PALETTE.map((c) => (
+                              <button
+                                key={c}
+                                onClick={() => setCatColor(c)}
+                                className="w-6 h-6 rounded-full transition-transform"
+                                style={{
+                                  backgroundColor: c,
+                                  transform: catColor === c ? 'scale(1.3)' : 'scale(1)',
+                                  border: catColor === c ? '2px solid var(--th-text)' : '2px solid transparent',
+                                }}
+                              />
+                            ))}
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={addCustomCategory}
+                              disabled={!catName.trim() || !catEmoji.trim()}
+                              className="text-xs px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-30"
+                              style={{
+                                backgroundColor: 'var(--th-accent)',
+                                color: 'var(--th-accent-inv)',
+                              }}
+                            >
+                              Add
+                            </button>
+                            <button
+                              onClick={() => setShowCatForm(false)}
+                              className="text-xs px-4 py-2 rounded-lg"
+                              style={{ color: 'var(--th-text-muted)' }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </>
                   )}
                 </div>
 

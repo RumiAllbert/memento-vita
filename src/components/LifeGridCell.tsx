@@ -1,33 +1,23 @@
 import { memo, useState } from 'react';
-import { useStore } from '@nanostores/react';
-import { $highlightedCategory, $lifeStats } from '../stores/life';
-import { CATEGORY_COLORS } from '../lib/constants';
 import type { WeekData, MonthData, YearData } from '../lib/calculations';
 
-// Determine if a future week index falls within the highlighted category's range
-function useHighlightInfo(futureIndex: number) {
-  const highlighted = useStore($highlightedCategory);
-  const stats = useStore($lifeStats);
+const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-  if (!highlighted || !stats || futureIndex < 0) return { highlighted: null, isInCategory: false };
-
-  const categoryWeeks = stats.categoryBreakdown[highlighted] || 0;
-  // Show this category as a contiguous block starting from the current week
-  const isInCategory = futureIndex >= 0 && futureIndex < categoryWeeks;
-
-  return { highlighted, isInCategory, color: CATEGORY_COLORS[highlighted] };
-}
+const formatDate = (date: Date) =>
+  date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 
 interface WeekCellProps {
   week: WeekData;
+  highlighted: string | null;
+  currentWeekIndex: number;
+  highlightedCategoryWeeks: number;
+  highlightedColor?: string;
 }
 
-function WeekCell({ week }: WeekCellProps) {
+function WeekCell({ week, highlighted, currentWeekIndex, highlightedCategoryWeeks, highlightedColor }: WeekCellProps) {
   const [showTooltip, setShowTooltip] = useState(false);
-  const stats = useStore($lifeStats);
-  const currentIdx = stats?.currentWeekIndex ?? 0;
-  const futureOffset = week.status === 'future' ? week.index - currentIdx : -1;
-  const { highlighted, isInCategory, color } = useHighlightInfo(futureOffset);
+  const futureOffset = week.status === 'future' ? week.index - currentWeekIndex : -1;
+  const isInCategory = highlighted != null && futureOffset >= 0 && futureOffset < highlightedCategoryWeeks;
 
   const cellStyle: React.CSSProperties = {
     width: '100%',
@@ -45,7 +35,7 @@ function WeekCell({ week }: WeekCellProps) {
     cellStyle.boxShadow = '0 0 4px var(--th-current-shadow)';
   } else {
     if (highlighted && isInCategory) {
-      cellStyle.backgroundColor = color;
+      cellStyle.backgroundColor = highlightedColor;
       cellStyle.opacity = 0.85;
     } else if (highlighted) {
       cellStyle.backgroundColor = 'var(--th-future)';
@@ -56,9 +46,6 @@ function WeekCell({ week }: WeekCellProps) {
       cellStyle.border = '0.5px solid var(--th-border)';
     }
   }
-
-  const formatDate = (date: Date) =>
-    date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 
   return (
     <div
@@ -91,19 +78,16 @@ function WeekCell({ week }: WeekCellProps) {
 
 interface MonthCellProps {
   month: MonthData;
+  highlighted: string | null;
+  highlightedCategoryMonths: number;
+  currentMonthIndex: number;
+  highlightedColor?: string;
 }
 
-function MonthCellInner({ month }: MonthCellProps) {
+function MonthCellInner({ month, highlighted, highlightedCategoryMonths, currentMonthIndex, highlightedColor }: MonthCellProps) {
   const [showTooltip, setShowTooltip] = useState(false);
-  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-
-  const highlighted = useStore($highlightedCategory);
-  const stats = useStore($lifeStats);
-  const currentMonthIdx = stats ? Math.floor(stats.currentWeekIndex / 4.33) : 0;
-  const futureOffset = month.status === 'future' ? month.index - currentMonthIdx : -1;
-  const categoryWeeks = (highlighted && stats) ? (stats.categoryBreakdown[highlighted] || 0) : 0;
-  const categoryMonths = Math.round(categoryWeeks / 4.33);
-  const isInCategory = highlighted && futureOffset >= 0 && futureOffset < categoryMonths;
+  const futureOffset = month.status === 'future' ? month.index - currentMonthIndex : -1;
+  const isInCategory = highlighted != null && futureOffset >= 0 && futureOffset < highlightedCategoryMonths;
 
   const cellStyle: React.CSSProperties = {
     width: '100%',
@@ -121,7 +105,7 @@ function MonthCellInner({ month }: MonthCellProps) {
     cellStyle.boxShadow = '0 0 6px var(--th-current-shadow)';
   } else {
     if (highlighted && isInCategory) {
-      cellStyle.backgroundColor = CATEGORY_COLORS[highlighted];
+      cellStyle.backgroundColor = highlightedColor;
       cellStyle.opacity = 0.85;
     } else if (highlighted) {
       cellStyle.backgroundColor = 'var(--th-future)';
@@ -164,18 +148,16 @@ function MonthCellInner({ month }: MonthCellProps) {
 
 interface YearCellProps {
   year: YearData;
+  highlighted: string | null;
+  highlightedCategoryYears: number;
+  currentYearIndex: number;
+  highlightedColor?: string;
 }
 
-function YearCellInner({ year }: YearCellProps) {
+function YearCellInner({ year, highlighted, highlightedCategoryYears, currentYearIndex, highlightedColor }: YearCellProps) {
   const [showTooltip, setShowTooltip] = useState(false);
-
-  const highlighted = useStore($highlightedCategory);
-  const stats = useStore($lifeStats);
-  const currentYear = stats ? Math.floor(stats.currentWeekIndex / 52) : 0;
-  const futureOffset = year.status === 'future' ? year.index - currentYear : -1;
-  const categoryWeeks = (highlighted && stats) ? (stats.categoryBreakdown[highlighted] || 0) : 0;
-  const categoryYears = Math.round(categoryWeeks / 52);
-  const isInCategory = highlighted && futureOffset >= 0 && futureOffset < categoryYears;
+  const futureOffset = year.status === 'future' ? year.index - currentYearIndex : -1;
+  const isInCategory = highlighted != null && futureOffset >= 0 && futureOffset < highlightedCategoryYears;
 
   const cellStyle: React.CSSProperties = {
     width: '100%',
@@ -194,7 +176,7 @@ function YearCellInner({ year }: YearCellProps) {
     cellStyle.border = '1px solid var(--th-border)';
   } else {
     if (highlighted && isInCategory) {
-      cellStyle.backgroundColor = CATEGORY_COLORS[highlighted];
+      cellStyle.backgroundColor = highlightedColor;
       cellStyle.opacity = 0.85;
     } else if (highlighted) {
       cellStyle.backgroundColor = 'var(--th-future)';

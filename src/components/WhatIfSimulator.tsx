@@ -1,7 +1,13 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useStore } from '@nanostores/react';
-import { $lifeConfig, $timeAllocation, $relationships, $lifeStats } from '../stores/life';
+import {
+  $lifeConfig,
+  $timeAllocation,
+  $relationships,
+  $lifeStats,
+  $parsedCustomCategories,
+} from '../stores/life';
 import TimeSlider from './TimeSlider';
 import {
   calcLifeStats,
@@ -10,19 +16,22 @@ import {
   type RelationshipConfig,
 } from '../lib/calculations';
 import {
-  CATEGORY_COLORS,
-  CATEGORY_LABELS,
-  CATEGORY_EMOJI,
   DEFAULT_LIFE_EXPECTANCY,
   DEFAULT_RETIREMENT_AGE,
   DEFAULT_TIME_ALLOCATION,
-  DEFAULT_PARENTS_AGE,
-  DEFAULT_PARENTS_LIFE_EXPECTANCY,
-  DEFAULT_PARENT_VISITS_PER_YEAR,
+  DEFAULT_MOTHER_AGE,
+  DEFAULT_FATHER_AGE,
+  DEFAULT_MOTHER_LIFE_EXPECTANCY,
+  DEFAULT_FATHER_LIFE_EXPECTANCY,
+  DEFAULT_MOTHER_VISITS_PER_YEAR,
+  DEFAULT_FATHER_VISITS_PER_YEAR,
+  DEFAULT_MOTHER_ALIVE,
+  DEFAULT_FATHER_ALIVE,
   DEFAULT_PHONE_HOURS_PER_DAY,
-  DEFAULT_PARENTS_ALIVE,
-  DEFAULT_PARENTS_LIVE_TOGETHER,
   WEEKS_PER_YEAR,
+  getCategoryColor,
+  getCategoryLabel,
+  getCategoryEmoji,
 } from '../lib/constants';
 import ThemeToggle from './ThemeToggle';
 
@@ -45,6 +54,7 @@ export default function WhatIfSimulator() {
   const rawConfig = useStore($lifeConfig);
   const rawAlloc = useStore($timeAllocation);
   const rawRels = useStore($relationships);
+  const customCats = useStore($parsedCustomCategories);
 
   // Parse current values
   const config: LifeConfig = {
@@ -63,16 +73,25 @@ export default function WhatIfSimulator() {
     health: Number(rawAlloc.health) || DEFAULT_TIME_ALLOCATION.health,
     chores: Number(rawAlloc.chores) || DEFAULT_TIME_ALLOCATION.chores,
   };
+  // Include custom categories in base allocation
+  for (const cat of customCats) {
+    baseAlloc[cat.id] = cat.hours;
+  }
 
-  const parentsAlive = (rawRels.parentsAlive || DEFAULT_PARENTS_ALIVE) as 'both' | 'one' | 'neither';
+  const motherAlive = (rawRels.motherAlive || DEFAULT_MOTHER_ALIVE) as 'true' | 'false';
+  const fatherAlive = (rawRels.fatherAlive || DEFAULT_FATHER_ALIVE) as 'true' | 'false';
+  const anyParentAlive = motherAlive === 'true' || fatherAlive === 'true';
 
   const baseRels: RelationshipConfig = {
-    parentsAge: Number(rawRels.parentsAge) || DEFAULT_PARENTS_AGE,
-    parentsLifeExpectancy: Number(rawRels.parentsLifeExpectancy) || DEFAULT_PARENTS_LIFE_EXPECTANCY,
-    parentVisitsPerYear: Number(rawRels.parentVisitsPerYear) || DEFAULT_PARENT_VISITS_PER_YEAR,
+    motherAge: Number(rawRels.motherAge) || DEFAULT_MOTHER_AGE,
+    fatherAge: Number(rawRels.fatherAge) || DEFAULT_FATHER_AGE,
+    motherLifeExpectancy: Number(rawRels.motherLifeExpectancy) || DEFAULT_MOTHER_LIFE_EXPECTANCY,
+    fatherLifeExpectancy: Number(rawRels.fatherLifeExpectancy) || DEFAULT_FATHER_LIFE_EXPECTANCY,
+    motherVisitsPerYear: Number(rawRels.motherVisitsPerYear) || DEFAULT_MOTHER_VISITS_PER_YEAR,
+    fatherVisitsPerYear: Number(rawRels.fatherVisitsPerYear) || DEFAULT_FATHER_VISITS_PER_YEAR,
+    motherAlive,
+    fatherAlive,
     phoneHoursPerDay: Number(rawRels.phoneHoursPerDay) || DEFAULT_PHONE_HOURS_PER_DAY,
-    parentsAlive,
-    parentsLiveTogether: (rawRels.parentsLiveTogether || DEFAULT_PARENTS_LIVE_TOGETHER) as 'true' | 'false',
   };
 
   // "What if" adjustable state
@@ -103,6 +122,9 @@ export default function WhatIfSimulator() {
   };
 
   const categories = Object.entries(altStats.categoryBreakdown);
+
+  // Separate built-in and custom allocation keys for sliders
+  const builtinKeys = ['sleep', 'work', 'family', 'partner', 'hobbies', 'health', 'chores'];
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 sm:py-10 space-y-6 sm:space-y-10">
@@ -168,15 +190,15 @@ export default function WhatIfSimulator() {
 
           <div className="space-y-5">
             <h3 className="text-xs" style={{ color: 'var(--th-text-muted)' }}>Daily Time Allocation</h3>
-            {(Object.keys(altAlloc) as Array<keyof TimeAllocation>).map((key) => (
+            {builtinKeys.map((key) => (
               <div key={key} className="space-y-1">
                 <TimeSlider
-                  label={CATEGORY_LABELS[key] || key}
-                  value={altAlloc[key]}
+                  label={getCategoryLabel(key)}
+                  value={altAlloc[key] || 0}
                   min={0}
                   max={16}
                   step={0.5}
-                  color={CATEGORY_COLORS[key]}
+                  color={getCategoryColor(key)}
                   onChange={(v) => setAltAlloc((prev) => ({ ...prev, [key]: v }))}
                 />
                 <DeltaBadge
@@ -185,23 +207,57 @@ export default function WhatIfSimulator() {
                 />
               </div>
             ))}
+
+            {/* Custom category sliders */}
+            {customCats.length > 0 && customCats.map((cat) => (
+              <div key={cat.id} className="space-y-1">
+                <TimeSlider
+                  label={`${cat.emoji} ${cat.label}`}
+                  value={altAlloc[cat.id] || 0}
+                  min={0}
+                  max={16}
+                  step={0.5}
+                  color={cat.color}
+                  onChange={(v) => setAltAlloc((prev) => ({ ...prev, [cat.id]: v }))}
+                />
+                <DeltaBadge
+                  current={currentStats.categoryBreakdown[cat.id] || 0}
+                  alt={altStats.categoryBreakdown[cat.id] || 0}
+                />
+              </div>
+            ))}
           </div>
 
           <div className="space-y-5 pt-6" style={{ borderTop: '1px solid var(--th-border)' }}>
             <h3 className="text-xs" style={{ color: 'var(--th-text-muted)' }}>Relationships & Habits</h3>
-            {parentsAlive !== 'neither' && (
+            {motherAlive === 'true' && (
               <div className="space-y-1">
                 <TimeSlider
-                  label={`See ${parentsAlive === 'one' ? 'parent' : 'parents'} per year`}
-                  value={altRels.parentVisitsPerYear}
+                  label="See mother per year"
+                  value={altRels.motherVisitsPerYear}
                   min={0}
                   max={52}
                   step={1}
                   unit="times/year"
-                  color={CATEGORY_COLORS.parents}
-                  onChange={(v) => setAltRels((prev) => ({ ...prev, parentVisitsPerYear: v }))}
+                  color={getCategoryColor('parents')}
+                  onChange={(v) => setAltRels((prev) => ({ ...prev, motherVisitsPerYear: v }))}
                 />
-                <DeltaBadge current={currentStats.parentVisitsLeft} alt={altStats.parentVisitsLeft} unit="visits" />
+                <DeltaBadge current={currentStats.motherVisitsLeft} alt={altStats.motherVisitsLeft} unit="visits" />
+              </div>
+            )}
+            {fatherAlive === 'true' && (
+              <div className="space-y-1">
+                <TimeSlider
+                  label="See father per year"
+                  value={altRels.fatherVisitsPerYear}
+                  min={0}
+                  max={52}
+                  step={1}
+                  unit="times/year"
+                  color={getCategoryColor('parents')}
+                  onChange={(v) => setAltRels((prev) => ({ ...prev, fatherVisitsPerYear: v }))}
+                />
+                <DeltaBadge current={currentStats.fatherVisitsLeft} alt={altStats.fatherVisitsLeft} unit="visits" />
               </div>
             )}
             <div className="space-y-1">
@@ -212,7 +268,7 @@ export default function WhatIfSimulator() {
                 max={12}
                 step={0.5}
                 unit="hrs/day"
-                color={CATEGORY_COLORS.phone}
+                color={getCategoryColor('phone')}
                 onChange={(v) => setAltRels((prev) => ({ ...prev, phoneHoursPerDay: v }))}
               />
               <DeltaBadge current={currentStats.phoneWeeksTotal} alt={altStats.phoneWeeksTotal} />
@@ -244,7 +300,7 @@ export default function WhatIfSimulator() {
                   alt: altStats.categoryBreakdown.free || 0,
                   unit: 'weeks',
                 },
-                ...(parentsAlive !== 'neither'
+                ...(anyParentAlive
                   ? [{
                       label: 'Parent visits',
                       current: currentStats.parentVisitsLeft,
@@ -306,15 +362,15 @@ export default function WhatIfSimulator() {
               {categories.map(([key, altWeeks]) => {
                 const currentWeeks = currentStats.categoryBreakdown[key] || 0;
                 const maxWeeks = Math.max(currentWeeks, altWeeks, 1);
-                const color = CATEGORY_COLORS[key] || '#525252';
-                const emoji = CATEGORY_EMOJI[key] || '';
+                const color = getCategoryColor(key);
+                const emoji = getCategoryEmoji(key);
                 const diff = altWeeks - currentWeeks;
 
                 return (
                   <div key={key} className="space-y-2">
                     <div className="flex justify-between items-baseline">
                       <span className="text-xs" style={{ color: 'var(--th-text-muted)' }}>
-                        {emoji} {CATEGORY_LABELS[key] || key}
+                        {emoji} {getCategoryLabel(key)}
                       </span>
                       {Math.abs(diff) >= 1 && (
                         <span
@@ -394,8 +450,8 @@ export default function WhatIfSimulator() {
                   const yrs = (Math.abs(phoneDiff) / WEEKS_PER_YEAR).toFixed(1);
                   lines.push(`Cutting phone time saves ~${yrs} years of your life.`);
                 }
-                if (visitDiff > 10 && parentsAlive !== 'neither') {
-                  lines.push(`You'd see your ${parentsAlive === 'one' ? 'parent' : 'parents'} ${visitDiff} more times. They'd notice.`);
+                if (visitDiff > 10 && anyParentAlive) {
+                  lines.push(`You'd see your parents ${visitDiff} more times. They'd notice.`);
                 }
                 if (lines.length === 0) {
                   lines.push('Move the sliders to see how small changes reshape your remaining time.');

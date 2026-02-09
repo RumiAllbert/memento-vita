@@ -3,10 +3,22 @@ export const MONTHS_PER_YEAR = 12;
 
 export const DEFAULT_LIFE_EXPECTANCY = 73;
 export const DEFAULT_RETIREMENT_AGE = 65;
+
+// Split parent defaults
+export const DEFAULT_MOTHER_AGE = 55;
+export const DEFAULT_FATHER_AGE = 55;
+export const DEFAULT_MOTHER_LIFE_EXPECTANCY = 80;
+export const DEFAULT_FATHER_LIFE_EXPECTANCY = 80;
+export const DEFAULT_MOTHER_VISITS_PER_YEAR = 10;
+export const DEFAULT_FATHER_VISITS_PER_YEAR = 10;
+export const DEFAULT_MOTHER_ALIVE = 'true';
+export const DEFAULT_FATHER_ALIVE = 'true';
+export const DEFAULT_PHONE_HOURS_PER_DAY = 4;
+
+// Legacy defaults (for migration)
 export const DEFAULT_PARENTS_AGE = 55;
 export const DEFAULT_PARENTS_LIFE_EXPECTANCY = 80;
 export const DEFAULT_PARENT_VISITS_PER_YEAR = 10;
-export const DEFAULT_PHONE_HOURS_PER_DAY = 4;
 export const DEFAULT_PARENTS_ALIVE = 'both';
 export const DEFAULT_PARENTS_LIVE_TOGETHER = 'true';
 
@@ -58,6 +70,50 @@ export const CATEGORY_EMOJI: Record<string, string> = {
   parents: '\u{1F9D3}',
   free: '\u{2728}',
 };
+
+// Custom categories
+export const MAX_CUSTOM_CATEGORIES = 3;
+
+export const CUSTOM_CATEGORY_PALETTE = [
+  '#c2855a', // warm amber
+  '#6ba39b', // teal
+  '#a36b9b', // mauve
+  '#8fa36b', // olive green
+  '#6b8fa3', // steel blue
+  '#a3836b', // clay
+];
+
+export interface CustomCategory {
+  id: string;
+  label: string;
+  emoji: string;
+  color: string;
+  hours: number;
+}
+
+// Helper functions that check custom categories first, then built-in maps
+let _customCategories: CustomCategory[] = [];
+export function setCustomCategoriesRef(cats: CustomCategory[]) {
+  _customCategories = cats;
+}
+
+export function getCategoryLabel(key: string): string {
+  const custom = _customCategories.find((c) => c.id === key);
+  if (custom) return custom.label;
+  return CATEGORY_LABELS[key] || key;
+}
+
+export function getCategoryColor(key: string): string {
+  const custom = _customCategories.find((c) => c.id === key);
+  if (custom) return custom.color;
+  return CATEGORY_COLORS[key] || '#525252';
+}
+
+export function getCategoryEmoji(key: string): string {
+  const custom = _customCategories.find((c) => c.id === key);
+  if (custom) return custom.emoji;
+  return CATEGORY_EMOJI[key] || '';
+}
 
 export const PHASE_COLORS: Record<string, { dark: string; light: string }> = {
   childhood: {

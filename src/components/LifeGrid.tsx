@@ -1,18 +1,16 @@
 import { useMemo, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '@nanostores/react';
-import { $lifeConfig, $viewMode } from '../stores/life';
+import { $parsedConfig, $viewMode, $highlightedCategory, $lifeStats } from '../stores/life';
 import {
   generateWeekData,
   generateMonthData,
   generateYearData,
-  type LifeConfig,
 } from '../lib/calculations';
 import {
   WEEKS_PER_YEAR,
   MONTHS_PER_YEAR,
-  DEFAULT_LIFE_EXPECTANCY,
-  DEFAULT_RETIREMENT_AGE,
+  getCategoryColor,
 } from '../lib/constants';
 import { MemoWeekCell, MemoMonthCell, MemoYearCell } from './LifeGridCell';
 import ViewSwitcher from './ViewSwitcher';
@@ -21,23 +19,27 @@ import type { ViewMode } from '../lib/constants';
 const VIEW_ORDER: ViewMode[] = ['years', 'months', 'weeks'];
 
 export default function LifeGrid() {
-  const rawConfig = useStore($lifeConfig);
+  const config = useStore($parsedConfig);
   const viewMode = useStore($viewMode) as ViewMode;
+  const highlighted = useStore($highlightedCategory);
+  const stats = useStore($lifeStats);
   const gridRef = useRef<HTMLDivElement>(null);
-
-  const config: LifeConfig = useMemo(
-    () => ({
-      birthDate: rawConfig.birthDate || '',
-      name: rawConfig.name || '',
-      lifeExpectancy: Number(rawConfig.lifeExpectancy) || DEFAULT_LIFE_EXPECTANCY,
-      retirementAge: Number(rawConfig.retirementAge) || DEFAULT_RETIREMENT_AGE,
-    }),
-    [rawConfig.birthDate, rawConfig.name, rawConfig.lifeExpectancy, rawConfig.retirementAge]
-  );
 
   const weeks = useMemo(() => (viewMode === 'weeks' ? generateWeekData(config) : []), [config, viewMode]);
   const months = useMemo(() => (viewMode === 'months' ? generateMonthData(config) : []), [config, viewMode]);
   const years = useMemo(() => (viewMode === 'years' ? generateYearData(config) : []), [config, viewMode]);
+
+  // Pre-compute highlight data once for all cells
+  const currentWeekIndex = stats?.currentWeekIndex ?? 0;
+  const highlightedCategoryWeeks = useMemo(
+    () => (highlighted && stats) ? (stats.categoryBreakdown[highlighted] || 0) : 0,
+    [highlighted, stats]
+  );
+  const highlightedColor = highlighted ? getCategoryColor(highlighted) : undefined;
+  const currentMonthIndex = useMemo(() => Math.floor(currentWeekIndex / 4.33), [currentWeekIndex]);
+  const highlightedCategoryMonths = useMemo(() => Math.round(highlightedCategoryWeeks / 4.33), [highlightedCategoryWeeks]);
+  const currentYearIndex = useMemo(() => Math.floor(currentWeekIndex / 52), [currentWeekIndex]);
+  const highlightedCategoryYears = useMemo(() => Math.round(highlightedCategoryWeeks / 52), [highlightedCategoryWeeks]);
 
   // Scroll-wheel zoom
   const lastWheel = useRef(0);
@@ -123,7 +125,14 @@ export default function LifeGrid() {
                 style={{ gridTemplateColumns: `repeat(${WEEKS_PER_YEAR}, 1fr)`, gap: '1px' }}
               >
                 {weeks.map((week) => (
-                  <MemoWeekCell key={week.index} week={week} />
+                  <MemoWeekCell
+                    key={week.index}
+                    week={week}
+                    highlighted={highlighted}
+                    currentWeekIndex={currentWeekIndex}
+                    highlightedCategoryWeeks={highlightedCategoryWeeks}
+                    highlightedColor={highlightedColor}
+                  />
                 ))}
               </div>
             </motion.div>
@@ -156,7 +165,14 @@ export default function LifeGrid() {
                 style={{ gridTemplateColumns: `repeat(${MONTHS_PER_YEAR}, 1fr)`, gap: '2px' }}
               >
                 {months.map((month) => (
-                  <MemoMonthCell key={month.index} month={month} />
+                  <MemoMonthCell
+                    key={month.index}
+                    month={month}
+                    highlighted={highlighted}
+                    highlightedCategoryMonths={highlightedCategoryMonths}
+                    currentMonthIndex={currentMonthIndex}
+                    highlightedColor={highlightedColor}
+                  />
                 ))}
               </div>
             </motion.div>
@@ -174,7 +190,14 @@ export default function LifeGrid() {
               transition={{ duration: 0.3 }}
             >
               {years.map((year) => (
-                <MemoYearCell key={year.index} year={year} />
+                <MemoYearCell
+                  key={year.index}
+                  year={year}
+                  highlighted={highlighted}
+                  highlightedCategoryYears={highlightedCategoryYears}
+                  currentYearIndex={currentYearIndex}
+                  highlightedColor={highlightedColor}
+                />
               ))}
             </motion.div>
           )}

@@ -70,7 +70,7 @@ export default function ExportPoster() {
     // Subtitle stats
     ctx.font = '400 10px "JetBrains Mono", monospace';
     const subtitleParts = [`~${stats.summersLeft} summers left`];
-    if ((rels.parentsAlive || 'both') !== 'neither') {
+    if (rels.motherAlive === 'true' || rels.fatherAlive === 'true') {
       subtitleParts.push(`~${stats.parentVisitsLeft} parent visits`);
     }
     subtitleParts.push(`${stats.phoneYearsTotal} years on screen`);

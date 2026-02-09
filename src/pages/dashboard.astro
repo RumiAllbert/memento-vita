@@ -54,7 +54,7 @@ import ShareToast from '../components/ShareToast.tsx';
     </div>
 
     <!-- Insight Cards -->
-    <InsightCards client:load />
+    <InsightCards client:visible />
 
     <!-- Footer -->
     <footer class="pt-6 sm:pt-8 pb-6 text-center space-y-2" style="border-top: 1px solid var(--th-border);">
@@ -68,8 +68,8 @@ import ShareToast from '../components/ShareToast.tsx';
   </div>
 
   <!-- Toasts -->
-  <ShareToast client:load />
-  <CoffeeToast client:load />
+  <ShareToast client:idle />
+  <CoffeeToast client:idle />
 
   <script>
     if (typeof window !== 'undefined' && localStorage.getItem('onboarded') !== 'true') {

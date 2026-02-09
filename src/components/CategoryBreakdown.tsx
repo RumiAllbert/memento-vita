@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { useStore } from '@nanostores/react';
 import { $lifeStats, $highlightedCategory } from '../stores/life';
-import { CATEGORY_COLORS, CATEGORY_LABELS, CATEGORY_EMOJI } from '../lib/constants';
+import { getCategoryColor, getCategoryLabel, getCategoryEmoji } from '../lib/constants';
 
 export default function CategoryBreakdown() {
   const stats = useStore($lifeStats);
@@ -29,7 +29,7 @@ export default function CategoryBreakdown() {
         </h2>
         <p className="text-xs" style={{ color: 'var(--th-text-muted)' }}>
           {highlighted
-            ? `${CATEGORY_EMOJI[highlighted] || ''} ${categoryBreakdown[highlighted]?.toLocaleString() || 0} weeks of ${CATEGORY_LABELS[highlighted] || highlighted} shown on the grid`
+            ? `${getCategoryEmoji(highlighted)} ${categoryBreakdown[highlighted]?.toLocaleString() || 0} weeks of ${getCategoryLabel(highlighted)} shown on the grid`
             : `Of your remaining ${weeksRemaining.toLocaleString()} weeks...`}
         </p>
       </div>
@@ -37,9 +37,9 @@ export default function CategoryBreakdown() {
       <div className="space-y-4">
         {categories.map(([key, weeks], i) => {
           const percentage = weeksRemaining > 0 ? (weeks / weeksRemaining) * 100 : 0;
-          const color = CATEGORY_COLORS[key] || '#525252';
-          const label = CATEGORY_LABELS[key] || key;
-          const emoji = CATEGORY_EMOJI[key] || '';
+          const color = getCategoryColor(key);
+          const label = getCategoryLabel(key);
+          const emoji = getCategoryEmoji(key);
           const isActive = highlighted === key;
           const isDimmed = highlighted !== null && !isActive;
 
@@ -99,13 +99,13 @@ export default function CategoryBreakdown() {
                 key={key}
                 className="cursor-pointer transition-opacity duration-200"
                 style={{
-                  backgroundColor: CATEGORY_COLORS[key] || '#525252',
+                  backgroundColor: getCategoryColor(key),
                   opacity: highlighted && !isActive ? 0.3 : 1,
                 }}
                 initial={{ width: 0 }}
                 animate={{ width: `${percentage}%` }}
                 transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94], delay: 0.8 }}
-                title={`${CATEGORY_LABELS[key]}: ${percentage.toFixed(1)}%`}
+                title={`${getCategoryLabel(key)}: ${percentage.toFixed(1)}%`}
                 onMouseEnter={() => $highlightedCategory.set(key)}
                 onMouseLeave={() => $highlightedCategory.set(null)}
               />

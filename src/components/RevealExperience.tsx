@@ -117,8 +117,10 @@ export default function RevealExperience() {
   const name = config.name || 'friend';
   const parentVisitsLeft = stats.parentVisitsLeft;
   const freeWeeks = stats.categoryBreakdown.free ?? 0;
-  const parentsAlive = rels.parentsAlive || 'both';
-  const parentLabel = parentsAlive === 'one' ? 'parent' : 'parents';
+  const motherAlive = rels.motherAlive === 'true';
+  const fatherAlive = rels.fatherAlive === 'true';
+  const anyParentAlive = motherAlive || fatherAlive;
+  const parentLabel = motherAlive && fatherAlive ? 'parents' : motherAlive ? 'mom' : 'dad';
 
   const handleContinue = () => {
     $hasSeenReveal.set('true');
@@ -200,10 +202,10 @@ export default function RevealExperience() {
       </RevealSection>
 
       {/* 5. Parent Visits */}
-      {parentsAlive !== 'neither' && (
+      {anyParentAlive && (
         <RevealSection>
           <p className="text-sm" style={{ color: 'var(--th-text-muted)' }}>
-            If you see your {parentLabel} {Number(rels.parentVisitsPerYear)} times a year
+            If you keep visiting your {parentLabel}
           </p>
           <div className="text-6xl md:text-7xl font-medium tabular-nums">
             <AnimatedCounter target={parentVisitsLeft} duration={2000} prefix="~" color={CATEGORY_COLORS.parents} />

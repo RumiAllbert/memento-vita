@@ -10,19 +10,24 @@ import {
   DEFAULT_LIFE_EXPECTANCY,
   DEFAULT_RETIREMENT_AGE,
   DEFAULT_TIME_ALLOCATION,
-  DEFAULT_PARENTS_AGE,
-  DEFAULT_PARENTS_LIFE_EXPECTANCY,
-  DEFAULT_PARENT_VISITS_PER_YEAR,
+  DEFAULT_MOTHER_AGE,
+  DEFAULT_FATHER_AGE,
+  DEFAULT_MOTHER_LIFE_EXPECTANCY,
+  DEFAULT_FATHER_LIFE_EXPECTANCY,
+  DEFAULT_MOTHER_VISITS_PER_YEAR,
+  DEFAULT_FATHER_VISITS_PER_YEAR,
+  DEFAULT_MOTHER_ALIVE,
+  DEFAULT_FATHER_ALIVE,
   DEFAULT_PHONE_HOURS_PER_DAY,
-  DEFAULT_PARENTS_ALIVE,
-  DEFAULT_PARENTS_LIVE_TOGETHER,
+  setCustomCategoriesRef,
+  type CustomCategory,
 } from '../lib/constants';
 
 // ---- localStorage helpers (replaces @nanostores/persistent entirely) ----
 
 const isBrowser = typeof window !== 'undefined';
 
-function localAtom(key: string, fallback: string) {
+export function localAtom(key: string, fallback: string) {
   const stored = isBrowser ? localStorage.getItem(key) : null;
   const store = atom<string>(stored ?? fallback);
   store.listen((val) => {
@@ -51,6 +56,52 @@ function localMap<T extends Record<string, string>>(prefix: string, defaults: T)
   return store;
 }
 
+// ---- Migration: old parent fields → new split mother/father fields ----
+
+function migrateRelationships() {
+  if (!isBrowser) return;
+
+  // Check if new keys already exist — skip migration if so
+  if (localStorage.getItem('relationships:motherAge') !== null) return;
+
+  // Check if old keys exist
+  const oldAge = localStorage.getItem('relationships:parentsAge');
+  if (oldAge === null) return; // fresh install, no migration needed
+
+  const oldLE = localStorage.getItem('relationships:parentsLifeExpectancy');
+  const oldVisits = localStorage.getItem('relationships:parentVisitsPerYear');
+  const oldAlive = localStorage.getItem('relationships:parentsAlive');
+
+  // Copy old values to both mother and father
+  if (oldAge) {
+    localStorage.setItem('relationships:motherAge', oldAge);
+    localStorage.setItem('relationships:fatherAge', oldAge);
+  }
+  if (oldLE) {
+    localStorage.setItem('relationships:motherLifeExpectancy', oldLE);
+    localStorage.setItem('relationships:fatherLifeExpectancy', oldLE);
+  }
+  if (oldVisits) {
+    localStorage.setItem('relationships:motherVisitsPerYear', oldVisits);
+    localStorage.setItem('relationships:fatherVisitsPerYear', oldVisits);
+  }
+
+  // Map parentsAlive: 'both' → both true, 'one' → mother true / father false, 'neither' → both false
+  if (oldAlive === 'both') {
+    localStorage.setItem('relationships:motherAlive', 'true');
+    localStorage.setItem('relationships:fatherAlive', 'true');
+  } else if (oldAlive === 'one') {
+    localStorage.setItem('relationships:motherAlive', 'true');
+    localStorage.setItem('relationships:fatherAlive', 'false');
+  } else if (oldAlive === 'neither') {
+    localStorage.setItem('relationships:motherAlive', 'false');
+    localStorage.setItem('relationships:fatherAlive', 'false');
+  }
+}
+
+// Run migration before store initialization
+migrateRelationships();
+
 // ---- Stores ----
 
 export const $lifeConfig = localMap<Record<string, string>>('life-config:', {
@@ -71,12 +122,15 @@ export const $timeAllocation = localMap<Record<string, string>>('time-alloc:', {
 });
 
 export const $relationships = localMap<Record<string, string>>('relationships:', {
-  parentsAge: String(DEFAULT_PARENTS_AGE),
-  parentsLifeExpectancy: String(DEFAULT_PARENTS_LIFE_EXPECTANCY),
-  parentVisitsPerYear: String(DEFAULT_PARENT_VISITS_PER_YEAR),
+  motherAge: String(DEFAULT_MOTHER_AGE),
+  fatherAge: String(DEFAULT_FATHER_AGE),
+  motherLifeExpectancy: String(DEFAULT_MOTHER_LIFE_EXPECTANCY),
+  fatherLifeExpectancy: String(DEFAULT_FATHER_LIFE_EXPECTANCY),
+  motherVisitsPerYear: String(DEFAULT_MOTHER_VISITS_PER_YEAR),
+  fatherVisitsPerYear: String(DEFAULT_FATHER_VISITS_PER_YEAR),
+  motherAlive: DEFAULT_MOTHER_ALIVE,
+  fatherAlive: DEFAULT_FATHER_ALIVE,
   phoneHoursPerDay: String(DEFAULT_PHONE_HOURS_PER_DAY),
-  parentsAlive: DEFAULT_PARENTS_ALIVE,
-  parentsLiveTogether: DEFAULT_PARENTS_LIVE_TOGETHER,
 });
 
 export const $hasOnboarded = localAtom('onboarded', 'false');
@@ -84,21 +138,38 @@ export const $hasSeenReveal = localAtom('hasSeenReveal', 'false');
 export const $theme = localAtom('theme', 'light');
 export const $viewMode = localAtom('view-mode', 'weeks');
 
+// Custom categories (stored as JSON string)
+export const $customCategories = localAtom('custom-categories', '[]');
+
 // UI-only ephemeral state (not persisted)
 export const $highlightedCategory = atom<string | null>(null);
 
-// ---- Derived stats ----
+// ---- Parsed intermediate stores (single source of truth for string→number) ----
 
-export const $lifeStats = computed(
-  [$lifeConfig, $timeAllocation, $relationships],
-  (config, allocation, relationships): LifeStats | null => {
-    const parsedConfig: LifeConfig = {
-      birthDate: config.birthDate || '',
-      name: config.name || '',
-      lifeExpectancy: Number(config.lifeExpectancy) || DEFAULT_LIFE_EXPECTANCY,
-      retirementAge: Number(config.retirementAge) || DEFAULT_RETIREMENT_AGE,
-    };
-    const parsedAllocation: TimeAllocation = {
+export const $parsedConfig = computed([$lifeConfig], (config): LifeConfig => ({
+  birthDate: config.birthDate || '',
+  name: config.name || '',
+  lifeExpectancy: Number(config.lifeExpectancy) || DEFAULT_LIFE_EXPECTANCY,
+  retirementAge: Number(config.retirementAge) || DEFAULT_RETIREMENT_AGE,
+}));
+
+export const $parsedCustomCategories = computed([$customCategories], (raw): CustomCategory[] => {
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      // Keep the global ref in sync for helper functions
+      setCustomCategoriesRef(parsed);
+      return parsed;
+    }
+  } catch {}
+  setCustomCategoriesRef([]);
+  return [];
+});
+
+export const $parsedAllocation = computed(
+  [$timeAllocation, $parsedCustomCategories],
+  (allocation, customCats): TimeAllocation => {
+    const base: TimeAllocation = {
       sleep: Number(allocation.sleep) || DEFAULT_TIME_ALLOCATION.sleep,
       work: Number(allocation.work) || DEFAULT_TIME_ALLOCATION.work,
       family: Number(allocation.family) || DEFAULT_TIME_ALLOCATION.family,
@@ -107,14 +178,30 @@ export const $lifeStats = computed(
       health: Number(allocation.health) || DEFAULT_TIME_ALLOCATION.health,
       chores: Number(allocation.chores) || DEFAULT_TIME_ALLOCATION.chores,
     };
-    const parsedRelationships: RelationshipConfig = {
-      parentsAge: Number(relationships.parentsAge) || DEFAULT_PARENTS_AGE,
-      parentsLifeExpectancy: Number(relationships.parentsLifeExpectancy) || DEFAULT_PARENTS_LIFE_EXPECTANCY,
-      parentVisitsPerYear: Number(relationships.parentVisitsPerYear) || DEFAULT_PARENT_VISITS_PER_YEAR,
-      phoneHoursPerDay: Number(relationships.phoneHoursPerDay) || DEFAULT_PHONE_HOURS_PER_DAY,
-      parentsAlive: (relationships.parentsAlive as 'both' | 'one' | 'neither') || DEFAULT_PARENTS_ALIVE as 'both',
-      parentsLiveTogether: (relationships.parentsLiveTogether as 'true' | 'false') || DEFAULT_PARENTS_LIVE_TOGETHER as 'true',
-    };
-    return calcLifeStats(parsedConfig, parsedAllocation, parsedRelationships);
+    for (const cat of customCats) {
+      base[cat.id] = cat.hours;
+    }
+    return base;
+  }
+);
+
+export const $parsedRelationships = computed([$relationships], (relationships): RelationshipConfig => ({
+  motherAge: Number(relationships.motherAge) || DEFAULT_MOTHER_AGE,
+  fatherAge: Number(relationships.fatherAge) || DEFAULT_FATHER_AGE,
+  motherLifeExpectancy: Number(relationships.motherLifeExpectancy) || DEFAULT_MOTHER_LIFE_EXPECTANCY,
+  fatherLifeExpectancy: Number(relationships.fatherLifeExpectancy) || DEFAULT_FATHER_LIFE_EXPECTANCY,
+  motherVisitsPerYear: Number(relationships.motherVisitsPerYear) || DEFAULT_MOTHER_VISITS_PER_YEAR,
+  fatherVisitsPerYear: Number(relationships.fatherVisitsPerYear) || DEFAULT_FATHER_VISITS_PER_YEAR,
+  motherAlive: (relationships.motherAlive as 'true' | 'false') || DEFAULT_MOTHER_ALIVE as 'true',
+  fatherAlive: (relationships.fatherAlive as 'true' | 'false') || DEFAULT_FATHER_ALIVE as 'true',
+  phoneHoursPerDay: Number(relationships.phoneHoursPerDay) || DEFAULT_PHONE_HOURS_PER_DAY,
+}));
+
+// ---- Derived stats ----
+
+export const $lifeStats = computed(
+  [$parsedConfig, $parsedAllocation, $parsedRelationships],
+  (config, allocation, relationships): LifeStats | null => {
+    return calcLifeStats(config, allocation, relationships);
   }
 );

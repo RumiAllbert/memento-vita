@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '@nanostores/react';
 import { $lifeConfig, $lifeStats } from '../stores/life';
+import { $activeToast } from '../stores/toast';
 
 const COOLDOWN_MS = 2 * 24 * 60 * 60 * 1000; // 2 days
 
@@ -9,17 +10,39 @@ export default function ShareToast() {
   const [show, setShow] = useState(false);
   const rawConfig = useStore($lifeConfig);
   const stats = useStore($lifeStats);
+  const activeToast = useStore($activeToast);
 
   useEffect(() => {
     const last = localStorage.getItem('share-dismissed-at');
     if (last && Date.now() - Number(last) < COOLDOWN_MS) return;
 
-    const timer = setTimeout(() => setShow(true), 20000);
-    return () => clearTimeout(timer);
+    let retryTimer: ReturnType<typeof setInterval>;
+
+    const tryShow = () => {
+      if ($activeToast.get() === null) {
+        setShow(true);
+        $activeToast.set('share');
+        if (retryTimer) clearInterval(retryTimer);
+      }
+    };
+
+    const timer = setTimeout(() => {
+      if ($activeToast.get() === null) {
+        tryShow();
+      } else {
+        retryTimer = setInterval(tryShow, 5000);
+      }
+    }, 20000);
+
+    return () => {
+      clearTimeout(timer);
+      if (retryTimer) clearInterval(retryTimer);
+    };
   }, []);
 
   const dismiss = () => {
     setShow(false);
+    $activeToast.set(null);
     localStorage.setItem('share-dismissed-at', String(Date.now()));
   };
 

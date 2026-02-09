@@ -8,22 +8,19 @@ export interface LifeConfig {
 }
 
 export interface RelationshipConfig {
-  parentsAge: number;
-  parentsLifeExpectancy: number;
-  parentVisitsPerYear: number;
+  motherAge: number;
+  fatherAge: number;
+  motherLifeExpectancy: number;
+  fatherLifeExpectancy: number;
+  motherVisitsPerYear: number;
+  fatherVisitsPerYear: number;
+  motherAlive: 'true' | 'false';
+  fatherAlive: 'true' | 'false';
   phoneHoursPerDay: number;
-  parentsAlive: 'both' | 'one' | 'neither';
-  parentsLiveTogether: 'true' | 'false';
 }
 
 export interface TimeAllocation {
-  sleep: number;
-  work: number;
-  family: number;
-  partner: number;
-  hobbies: number;
-  health: number;
-  chores: number;
+  [key: string]: number;
 }
 
 export type WeekStatus = 'lived' | 'current' | 'future';
@@ -65,6 +62,10 @@ export interface LifeStats {
   // Relationship stats
   parentVisitsLeft: number;
   parentYearsLeft: number;
+  motherVisitsLeft: number;
+  fatherVisitsLeft: number;
+  motherYearsLeft: number;
+  fatherYearsLeft: number;
   phoneWeeksTotal: number;
   phoneYearsTotal: number;
   // Emotional stats
@@ -153,16 +154,23 @@ export function calcLifeStats(
   const summersLeft = Math.floor(yearsRemaining);
   const weekendsLeft = weeksRemaining * 2;
 
-  // Relationship stats
-  let parentYearsLeft = 0;
-  let parentVisitsLeft = 0;
-  if (relationships.parentsAlive !== 'neither') {
-    parentYearsLeft = Math.max(0, relationships.parentsLifeExpectancy - relationships.parentsAge);
-    parentVisitsLeft = Math.round(parentYearsLeft * relationships.parentVisitsPerYear);
-    if (relationships.parentsAlive === 'both' && relationships.parentsLiveTogether === 'false') {
-      parentVisitsLeft *= 2;
-    }
+  // Split parent stats
+  let motherYearsLeft = 0;
+  let motherVisitsLeft = 0;
+  if (relationships.motherAlive === 'true') {
+    motherYearsLeft = Math.max(0, relationships.motherLifeExpectancy - relationships.motherAge);
+    motherVisitsLeft = Math.round(motherYearsLeft * relationships.motherVisitsPerYear);
   }
+
+  let fatherYearsLeft = 0;
+  let fatherVisitsLeft = 0;
+  if (relationships.fatherAlive === 'true') {
+    fatherYearsLeft = Math.max(0, relationships.fatherLifeExpectancy - relationships.fatherAge);
+    fatherVisitsLeft = Math.round(fatherYearsLeft * relationships.fatherVisitsPerYear);
+  }
+
+  const parentVisitsLeft = motherVisitsLeft + fatherVisitsLeft;
+  const parentYearsLeft = Math.max(motherYearsLeft, fatherYearsLeft);
 
   // Phone time: total weeks of your remaining life spent on phone
   const phoneWeeksTotal = Math.round((relationships.phoneHoursPerDay / 24) * weeksRemaining);
@@ -184,6 +192,10 @@ export function calcLifeStats(
     weekendsLeft,
     parentVisitsLeft,
     parentYearsLeft,
+    motherVisitsLeft,
+    fatherVisitsLeft,
+    motherYearsLeft,
+    fatherYearsLeft,
     phoneWeeksTotal,
     phoneYearsTotal,
     booksLeft,

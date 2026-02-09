@@ -1,9 +1,45 @@
 ---
 interface Props {
   title?: string;
+  description?: string;
 }
 
-const { title = 'Memento Vita — Life Calendar' } = Astro.props;
+const SITE_URL = 'https://mementovita.vercel.app';
+const DEFAULT_TITLE = 'Memento Vita — Visualize Your Life in Weeks | Memento Mori Life Calendar';
+const DEFAULT_DESCRIPTION = 'Memento Vita is a free memento mori life calendar that visualizes your entire life as a grid of weeks. See how many weeks you\'ve lived, how many remain, and make every moment count. Inspired by the Stoic practice of memento mori — remember, you will die.';
+
+const { title = DEFAULT_TITLE, description = DEFAULT_DESCRIPTION } = Astro.props;
+const canonicalURL = new URL(Astro.url.pathname, SITE_URL);
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Memento Vita',
+  alternateName: ['Memento Mori Calendar', 'Life in Weeks Calculator', 'Life Calendar'],
+  url: SITE_URL,
+  description: DEFAULT_DESCRIPTION,
+  applicationCategory: 'LifestyleApplication',
+  operatingSystem: 'Any',
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'USD',
+  },
+  featureList: [
+    'Life visualization in weeks, months, and years',
+    'Memento mori weekly grid calendar',
+    'Time remaining calculator',
+    'What-if life scenario simulator',
+    'Exportable life poster',
+    'Category breakdown of time spent',
+  ],
+  screenshot: `${SITE_URL}/assets/social-image.jpeg`,
+  author: {
+    '@type': 'Person',
+    name: 'Rumi',
+    url: 'https://rumiallbert.com',
+  },
+};
 ---
 
 <!doctype html>
@@ -11,22 +47,41 @@ const { title = 'Memento Vita — Life Calendar' } = Astro.props;
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Visualize your life as a grid of weeks. Make time tangible." />
-    
+    <meta name="description" content={description} />
+    <meta name="keywords" content="memento mori, memento vita, life calendar, life in weeks, life visualization, weeks left to live, how many weeks in a life, life expectancy calculator, mortality calculator, time remaining, life grid, weekly life calendar, stoic philosophy, remember you will die, make time count" />
+    <meta name="author" content="Rumi" />
+    <meta name="theme-color" content="#f8f8f8" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href={canonicalURL} />
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content={Astro.url} />
+    <meta property="og:url" content={canonicalURL} />
     <meta property="og:title" content={title} />
-    <meta property="og:description" content="Visualize your life as a grid of weeks. Make time tangible." />
-    <meta property="og:image" content="https://mementovita.vercel.app/assets/social-image.jpeg" />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={`${SITE_URL}/assets/social-image-og.jpeg`} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Memento Vita — Your life visualized as a grid of weeks" />
+    <meta property="og:site_name" content="Memento Vita" />
+    <meta property="og:locale" content="en_US" />
 
     <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content={Astro.url} />
-    <meta property="twitter:title" content={title} />
-    <meta property="twitter:description" content="Visualize your life as a grid of weeks. Make time tangible." />
-    <meta property="twitter:image" content="https://mementovita.vercel.app/assets/social-image.jpeg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content={canonicalURL} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={`${SITE_URL}/assets/social-image-og.jpeg`} />
+    <meta name="twitter:image:alt" content="Memento Vita — Your life visualized as a grid of weeks" />
+
+    <!-- Favicons -->
     <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
     <title>{title}</title>
     <script is:inline>
       // Apply saved theme instantly to prevent flash

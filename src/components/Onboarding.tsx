@@ -199,6 +199,7 @@ export default function Onboarding() {
 
   return (
     <motion.div
+      data-onboarding
       className="min-h-screen flex flex-col items-center justify-center px-4 py-6 sm:p-6"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}

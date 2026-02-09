@@ -6,7 +6,7 @@ interface Props {
 
 const SITE_URL = 'https://mementovita.vercel.app';
 const DEFAULT_TITLE = 'Memento Vita — Visualize Your Life in Weeks | Memento Mori Life Calendar';
-const DEFAULT_DESCRIPTION = 'Memento Vita is a free memento mori life calendar that visualizes your entire life as a grid of weeks. See how many weeks you\'ve lived, how many remain, and make every moment count. Inspired by the Stoic practice of memento mori — remember, you will die.';
+const DEFAULT_DESCRIPTION = 'Your life is about 4,000 weeks. See how many you have left.';
 
 const { title = DEFAULT_TITLE, description = DEFAULT_DESCRIPTION } = Astro.props;
 const canonicalURL = new URL(Astro.url.pathname, SITE_URL);

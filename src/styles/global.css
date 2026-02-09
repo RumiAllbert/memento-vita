@@ -90,22 +90,22 @@ html.light {
   --th-current-shadow: rgba(23, 23, 23, 0.25);
 }
 
-/* ===== THEME: Sepia — warm paper, like a worn book ===== */
-html.sepia {
-  color-scheme: light;
-  --th-bg: #f7f3ec;
-  --th-surface: #ffffff;
-  --th-text: #44392c;
-  --th-text-muted: #a09382;
-  --th-accent: #44392c;
-  --th-accent-inv: #f7f3ec;
-  --th-lived: #c4b49a;
-  --th-current: #44392c;
-  --th-future: #f0ebe3;
-  --th-border: #e2d9cb;
-  --th-slider-thumb: #44392c;
-  --th-slider-border: #f7f3ec;
-  --th-current-shadow: rgba(68, 57, 44, 0.3);
+/* ===== THEME: Midnight — deep indigo with violet accent ===== */
+html.midnight {
+  color-scheme: dark;
+  --th-bg: #0e0b1a;
+  --th-surface: #161226;
+  --th-text: #d4d0e8;
+  --th-text-muted: #6e6894;
+  --th-accent: #9b8adf;
+  --th-accent-inv: #0e0b1a;
+  --th-lived: #352f54;
+  --th-current: #9b8adf;
+  --th-future: #1a1530;
+  --th-border: #2a2445;
+  --th-slider-thumb: #9b8adf;
+  --th-slider-border: #0e0b1a;
+  --th-current-shadow: rgba(155, 138, 223, 0.35);
 }
 
 /* ===== THEME: Ocean — dark slate with cool blue accent ===== */
@@ -214,8 +214,7 @@ input[type="date"] { color-scheme: inherit; }
   cursor: pointer;
 }
 
-.light input[type="date"]::-webkit-calendar-picker-indicator,
-.sepia input[type="date"]::-webkit-calendar-picker-indicator {
+.light input[type="date"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
 }
 

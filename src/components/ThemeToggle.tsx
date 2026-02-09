@@ -6,7 +6,7 @@ import { $theme } from '../stores/life';
 const themes = [
   { id: 'dark', label: 'Dark', swatch: '#0a0a0a', border: '#262626' },
   { id: 'light', label: 'Light', swatch: '#f8f8f8', border: '#e5e5e5' },
-  { id: 'sepia', label: 'Sepia', swatch: '#f7f3ec', border: '#e2d9cb' },
+  { id: 'midnight', label: 'Midnight', swatch: '#0e0b1a', border: '#2a2445' },
   { id: 'ocean', label: 'Ocean', swatch: '#0f1318', border: '#2a3240' },
   { id: 'forest', label: 'Forest', swatch: '#101210', border: '#2a332b' },
   { id: 'rose', label: 'Rose', swatch: '#121012', border: '#302a30' },

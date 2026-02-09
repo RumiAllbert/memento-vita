@@ -1,4 +1,4 @@
-![Memento Vita Header](public/assets/header-image.png)
+![Memento Vita Header](public/assets/social-image.jpeg)
 
 # Memento Vita
 
@@ -28,6 +28,8 @@ npm run dev
 ```
 
 Open [localhost:4321](http://localhost:4321). The onboarding takes about a minute.
+
+Or try the live version at **[mementovita.vercel.app](https://mementovita.vercel.app/)**.
 
 ## The Onboarding
 
@@ -102,7 +104,6 @@ Zero data leaves your browser. No analytics, no cookies, no server calls. Clear 
 
 If this resonated with you and you want to make it better, PRs are welcome. Some ideas:
 
-- [ ] Deploy to a public URL
 - [ ] Milestone markers (weddings, graduations, big life goals)
 - [ ] Export your grid as an image
 - [ ] More insight cards

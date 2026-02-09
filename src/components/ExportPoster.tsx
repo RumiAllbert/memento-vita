@@ -158,12 +158,12 @@ export default function ExportPoster() {
     );
 
     ctx.font = '400 8px "JetBrains Mono", monospace';
-    ctx.fillText('memento vita', canvasW / 2, legendY + 58);
+    ctx.fillText('memento vitae', canvasW / 2, legendY + 58);
     ctx.textAlign = 'left';
 
     // Download
     const link = document.createElement('a');
-    link.download = `${(config.name || 'life').toLowerCase().replace(/\s+/g, '-')}-memento-vita.png`;
+    link.download = `${(config.name || 'life').toLowerCase().replace(/\s+/g, '-')}-memento-vitae.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
   }, [rawConfig, stats, rels]);

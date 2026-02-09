@@ -1,4 +1,4 @@
-import { useMemo, useRef, useCallback } from 'react';
+import { useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '@nanostores/react';
 import { $parsedConfig, $viewMode, $highlightedCategory, $lifeStats } from '../stores/life';
@@ -16,7 +16,6 @@ import { MemoWeekCell, MemoMonthCell, MemoYearCell } from './LifeGridCell';
 import ViewSwitcher from './ViewSwitcher';
 import type { ViewMode } from '../lib/constants';
 
-const VIEW_ORDER: ViewMode[] = ['years', 'months', 'weeks'];
 
 export default function LifeGrid() {
   const config = useStore($parsedConfig);
@@ -41,25 +40,6 @@ export default function LifeGrid() {
   const currentYearIndex = useMemo(() => Math.floor(currentWeekIndex / 52), [currentWeekIndex]);
   const highlightedCategoryYears = useMemo(() => Math.round(highlightedCategoryWeeks / 52), [highlightedCategoryWeeks]);
 
-  // Scroll-wheel zoom
-  const lastWheel = useRef(0);
-  const handleWheel = useCallback(
-    (e: React.WheelEvent) => {
-      const now = Date.now();
-      if (now - lastWheel.current < 400) return; // debounce
-      const idx = VIEW_ORDER.indexOf(viewMode);
-      if (e.deltaY > 0 && idx < VIEW_ORDER.length - 1) {
-        // scroll down → zoom in
-        lastWheel.current = now;
-        $viewMode.set(VIEW_ORDER[idx + 1]);
-      } else if (e.deltaY < 0 && idx > 0) {
-        // scroll up → zoom out
-        lastWheel.current = now;
-        $viewMode.set(VIEW_ORDER[idx - 1]);
-      }
-    },
-    [viewMode]
-  );
 
   if (!config.birthDate) return null;
 
@@ -91,8 +71,7 @@ export default function LifeGrid() {
         <ViewSwitcher />
       </div>
 
-      {/* Grid with scroll-wheel zoom */}
-      <div ref={gridRef} onWheel={handleWheel}>
+      <div ref={gridRef}>
         <AnimatePresence mode="wait">
           {/* Week view */}
           {viewMode === 'weeks' && (

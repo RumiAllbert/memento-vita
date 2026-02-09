@@ -132,7 +132,7 @@ export default function RevealExperience() {
       {/* 1. Greeting */}
       <RevealSection>
         <p className="text-sm tracking-wide uppercase" style={{ color: 'var(--th-text-muted)' }}>
-          memento vita
+          memento vitae
         </p>
         <h1 className="text-4xl md:text-5xl font-medium leading-tight" style={{ color: 'var(--th-text)' }}>
           Hey {name},

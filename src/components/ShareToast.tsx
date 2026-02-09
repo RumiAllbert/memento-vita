@@ -51,7 +51,7 @@ export default function ShareToast() {
     const text = `I just visualized my entire life in weeks. ${stats ? `${stats.weeksRemaining.toLocaleString()} weeks remaining.` : ''} Try it yourself:`;
 
     if (navigator.share) {
-      navigator.share({ title: 'Memento Vita', text, url }).catch(() => {});
+      navigator.share({ title: 'Memento Vitae', text, url }).catch(() => {});
     } else {
       navigator.clipboard.writeText(`${text} ${url}`).then(() => {
         alert('Link copied to clipboard!');

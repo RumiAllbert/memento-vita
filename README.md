@@ -1,6 +1,6 @@
-![Memento Vita Header](public/assets/social-image.jpeg)
+![Memento Vitae Header](public/assets/social-image.jpeg)
 
-# Memento Vita
+# Memento Vitae
 
 **Your life, in weeks.**
 
@@ -96,7 +96,7 @@ src/
 
 Zero data leaves your browser. No analytics, no cookies, no server calls. Clear your browser data and it's gone. That's a feature, not a limitation.
 
-## Why "Memento Vita"
+## Why "Memento Vitae"
 
 "Memento mori" means "remember you will die." This is the other side — *remember you are alive.* You still have weeks left. Use them.
 

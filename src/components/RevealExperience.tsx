@@ -251,7 +251,43 @@ export default function RevealExperience() {
         </p>
       </RevealSection>
 
-      {/* 8. CTA */}
+      {/* 8. Seneca Quote */}
+      <RevealSection>
+        <div className="space-y-6">
+          <div
+            className="w-12 h-px mx-auto"
+            style={{ backgroundColor: 'var(--th-border)' }}
+          />
+          <p
+            className="text-lg md:text-xl italic leading-relaxed tracking-wide"
+            style={{ color: 'var(--th-text)' }}
+          >
+            "Non exiguum tempus habemus,
+            <br />
+            sed multum perdidimus."
+          </p>
+          <p
+            className="text-sm leading-relaxed"
+            style={{ color: 'var(--th-text-muted)' }}
+          >
+            "It is not that we have a short time to live,
+            <br />
+            but that we waste a great deal of it."
+          </p>
+          <p
+            className="text-[10px] tracking-widest uppercase"
+            style={{ color: 'var(--th-text-muted)', opacity: 0.5 }}
+          >
+            Seneca, On the Shortness of Life
+          </p>
+          <div
+            className="w-12 h-px mx-auto"
+            style={{ backgroundColor: 'var(--th-border)' }}
+          />
+        </div>
+      </RevealSection>
+
+      {/* 9. CTA */}
       <RevealSection>
         <h2 className="text-3xl md:text-4xl font-medium leading-tight" style={{ color: 'var(--th-text)' }}>
           Now let's see your whole life at a glance.

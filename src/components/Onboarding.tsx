@@ -61,12 +61,12 @@ function PillSelector<T extends string>({
 
 const slideVariants = {
   enter: (direction: number) => ({
-    x: direction > 0 ? 80 : -80,
+    x: direction > 0 ? 40 : -40,
     opacity: 0,
   }),
   center: { x: 0, opacity: 1 },
   exit: (direction: number) => ({
-    x: direction > 0 ? -80 : 80,
+    x: direction > 0 ? -40 : 40,
     opacity: 0,
   }),
 };
@@ -200,7 +200,8 @@ export default function Onboarding() {
   return (
     <motion.div
       data-onboarding
-      className="min-h-screen flex flex-col items-center justify-center px-4 py-6 sm:p-6"
+      className="min-h-screen flex flex-col items-center justify-center px-5 py-6 sm:px-6"
+      style={{ overflowX: 'hidden' }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
@@ -343,17 +344,17 @@ export default function Onboarding() {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-6">
                   {/* Mother */}
                   <div className="space-y-4">
                     <div
-                      className="flex items-center justify-between rounded-xl px-4 py-3"
+                      className="flex items-center justify-between gap-3 rounded-xl px-4 py-3"
                       style={{
                         backgroundColor: 'var(--th-surface)',
                         border: '1px solid var(--th-border)',
                       }}
                     >
-                      <span className="text-xs" style={{ color: 'var(--th-text-muted)' }}>
+                      <span className="text-xs shrink-0" style={{ color: 'var(--th-text-muted)' }}>
                         Is your mother alive?
                       </span>
                       <PillSelector
@@ -370,7 +371,7 @@ export default function Onboarding() {
                       {motherAlive === 'true' && (
                         <motion.div
                           key="mother-fields"
-                          className="space-y-4 pl-2"
+                          className="space-y-4"
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
                           exit={{ opacity: 0, height: 0 }}
@@ -414,13 +415,13 @@ export default function Onboarding() {
                   {/* Father */}
                   <div className="space-y-4">
                     <div
-                      className="flex items-center justify-between rounded-xl px-4 py-3"
+                      className="flex items-center justify-between gap-3 rounded-xl px-4 py-3"
                       style={{
                         backgroundColor: 'var(--th-surface)',
                         border: '1px solid var(--th-border)',
                       }}
                     >
-                      <span className="text-xs" style={{ color: 'var(--th-text-muted)' }}>
+                      <span className="text-xs shrink-0" style={{ color: 'var(--th-text-muted)' }}>
                         Is your father alive?
                       </span>
                       <PillSelector
@@ -437,7 +438,7 @@ export default function Onboarding() {
                       {fatherAlive === 'true' && (
                         <motion.div
                           key="father-fields"
-                          className="space-y-4 pl-2"
+                          className="space-y-4"
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
                           exit={{ opacity: 0, height: 0 }}

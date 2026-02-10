@@ -361,7 +361,7 @@ export default function IntroAnimation({ onComplete }: Props) {
           animate={{ opacity: 0.35 }}
           transition={{ duration: 0.6, delay: 0.8 }}
         >
-          click anywhere to skip
+          tap anywhere to skip
         </motion.p>
       )}
     </div>

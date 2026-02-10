@@ -32,7 +32,7 @@ export default function TimeSlider({
           {value} {unit}
         </span>
       </div>
-      <div className="relative">
+      <div className="relative py-2">
         <input
           type="range"
           min={min}
@@ -40,7 +40,7 @@ export default function TimeSlider({
           step={step}
           value={value}
           onChange={(e) => onChange(parseFloat(e.target.value))}
-          className="w-full appearance-none h-1.5 rounded-full cursor-pointer"
+          className="w-full appearance-none h-2 sm:h-1.5 rounded-full cursor-pointer"
           style={{
             background: `linear-gradient(to right, ${trackColor} ${percentage}%, var(--th-border) ${percentage}%)`,
           }}
